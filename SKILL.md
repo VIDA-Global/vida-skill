@@ -44,13 +44,14 @@ Load the smallest relevant reference before configuration work:
 
 - Auth is query param only: `token=<VIDA_API_KEY>`
 - Token source: environment variable `VIDA_API_KEY`
-- Always include `targetAccountId` when using the API, except where a route explicitly names a
-  different scope parameter such as `targetOrganizationId`, or `POST /api/v2/tasks` selects the
-  executing agent with body `accountId`. Do not rely on `targetAccountId` to scope Task creation.
+- Always include `targetAccountId` when using an account-scoped API, except where the account ID is
+  already part of the route path or the route explicitly uses another scope such as
+  `targetOrganizationId`.
 - Computer Agent account routes include `targetAccountId` in the URL path. For those routes, use
   `/api/v2/computer/accounts/{targetAccountId}/...` and the token query parameter; do not put a
   different account id in the query string or body.
-- For task creation and outbound call/SMS/email helpers, also include body `accountId` set to the same agent account id as `targetAccountId`.
+- For Task creation and outbound call/SMS/email helpers, include query `targetAccountId` and body
+  `accountId`, both set to the agent account that will perform the work.
 - Do not include campaign/config override fields for normal task or email sending.
 - For organization workflows, list child agent accounts with `GET /api/v2/listAccounts?targetOrganizationId=<orgAccountId>`, then use the selected agent account ID as `targetAccountId`.
 - Prefer GET/read endpoints before mutation endpoints
@@ -319,8 +320,8 @@ Repeating and one-off Computer Agent schedules use the standard Tasks resource:
 - `POST /api/v2/tasks/{taskId}/run`
 - `GET /api/v2/tasks/{taskId}/runs`
 
-Creation selects the executing agent with body `accountId`. Include `targetAccountId` on every
-Task-id read, update, delete, run, and run-history request. Use `type:repeating` with
+Creation requires query `targetAccountId` and body `accountId` set to the same executing agent.
+Include `targetAccountId` on every Task read, update, delete, run, and run-history request. Use `type:repeating` with
 `cronSchedule.kind` `cron` or `every`, and `type:cronOneOff` with kind `at`. Creation also requires a
 nonblank `title` and `taskContext`. Cron expressions use five-field minute precision; `everyMs` must be
 at least 60000. A Task is active by default. Set `state:"paused"` explicitly when it must not run
@@ -818,15 +819,19 @@ Endpoint:
 
 Important query params:
 
-- `start`, `end` (unix seconds; defaults are recent window)
+- `start`, `end` (Unix seconds; default is the complete authorized history through now, so specify a
+  bounded range for routine analysis)
 - `fields` (comma-separated)
 - `pageSize` (max 10000), `page`
 - `includeFields` (returns schema)
 - `format=json|csv`
 - `targetAccountId`
-- additional query params are treated as filters
+- additional log-field query params are filters; append operators such as `__gte`, `__in`,
+  `__icontains`, or `__isnull` as documented in OpenAPI
 
-Use `format=csv` for exports and large analysis pulls.
+Use `format=csv` for exports and large analysis pulls. Use
+`POST /api/v2/logs/timeSeries` for aggregate, time-bucketed, organization, or agent metrics; send
+its required `targetAccountId` in the JSON body with the metric definition and bounded time range.
 
 ### 8) Access conversation and message details
 
@@ -838,8 +843,9 @@ Primary endpoints:
 - `GET /api/v2/messages/{roomId}`
 - `GET /api/v2/conversation/{roomId}/{uuid}`
 
-For full conversation detail, prefer:
-`GET /api/v2/conversation/{roomId}/{uuid}`
+For full conversation detail, use the `roomId` and `uuid` returned by a log entry with
+`GET /api/v2/conversation/{roomId}/{uuid}`. Use `POST /api/v2/conversation/batch` for up to 200
+lookups at once.
 
 ### 9) Build audit-ready incident packets
 
@@ -1028,7 +1034,7 @@ reports `setupComplete:true` and the catalog detail reports the skill ready.
 ### Create and verify an agent schedule Task
 
 ```bash
-curl -s -X POST "$VIDA_API_BASE_URL/api/v2/tasks?token=$VIDA_API_KEY" \
+curl -s -X POST "$VIDA_API_BASE_URL/api/v2/tasks?token=$VIDA_API_KEY&targetAccountId=$TARGET_ACCOUNT_ID" \
   -H "content-type: application/json" \
   --data-binary @- <<EOF
 {
@@ -1060,7 +1066,7 @@ curl -s "$VIDA_API_BASE_URL/api/v2/tasks/$TASK_ID/runs?token=$VIDA_API_KEY&targe
 ### Assign and verify Computer Agent work
 
 ```bash
-curl -s -X POST "$VIDA_API_BASE_URL/api/v2/tasks?token=$VIDA_API_KEY" \
+curl -s -X POST "$VIDA_API_BASE_URL/api/v2/tasks?token=$VIDA_API_KEY&targetAccountId=$TARGET_ACCOUNT_ID" \
   -H "content-type: application/json" \
   --data-binary @- <<EOF
 {

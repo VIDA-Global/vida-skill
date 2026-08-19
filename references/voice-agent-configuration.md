@@ -47,6 +47,26 @@ Select the exact `agentVoice` from `/agent/voices`. Check `accountAvailability.a
 
 Do not migrate the frontend's hard-coded catalog or invent voice IDs. The API catalog is the integration source of truth.
 
+## Phone and SIP setup
+
+An Agent configuration defines conversation behavior; phone-number or SIP setup connects that agent to telephony. Complete only the path the user needs, and verify account eligibility in OpenAPI before changing anything because provider and number-management operations may require reseller, partner, or developer access.
+
+For a Vida-managed phone number:
+
+1. Read `GET /api/v2/numberingProviders` and confirm the organization has an appropriate provider. Reseller or partner administrators can add or update one with `POST` or `PUT /api/v2/numberingProvider?targetOrganizationId=...` using the provider's documented configuration fields.
+2. Search available numbers with one of `/api/v2/phoneNumber/search/local/locality`, `/phrase`, or `/prefix`, including `targetAccountId` for the agent account.
+3. Present the exact number and any expected purchase or recurring impact to the user. Assign it only with explicit approval using `POST /api/v2/phoneNumber/assign?targetAccountId=...`.
+4. For an already-owned number, use `POST /api/v2/phoneNumber/byo/assign?targetAccountId=...` instead of purchasing another number.
+5. Verify assignment with `GET /api/v2/phoneNumbers?targetAccountId=...` and run an authorized inbound or outbound test. Returning a number with `POST /api/v2/phoneNumber/return` disconnects it and requires explicit confirmation.
+
+For SIP connectivity:
+
+1. Check address availability with `POST /api/v2/sip/registration/available?targetAccountId=...`.
+2. Create or update registration with `POST /api/v2/sip/registration?targetAccountId=...`. Follow OpenAPI for address, authentication, proxy, port, transport, and subscription fields; do not copy the password into Agent instructions, workspace files, logs, or chat.
+3. Verify with `GET /api/v2/sip/registration?targetAccountId=...` and a representative call.
+4. Use the documented IP whitelist or outbound-route APIs only when the selected SIP topology requires them and the caller has the required permission. Read the current list first and verify it after mutation.
+5. Deleting a registration, whitelist entry, or outbound route can interrupt calls. Require explicit confirmation and verify the resulting state.
+
 ## Functions
 
 Read `/agent/functions` before editing `actions`.
