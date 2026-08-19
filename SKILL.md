@@ -33,6 +33,13 @@ Use this skill only for Vida API operations.
 
 If endpoint behavior is unclear, read the OpenAPI file first and follow it over assumptions.
 
+Load the smallest relevant reference before configuration work:
+
+- `references/voice-agent-configuration.md` for Agent settings, discovery catalogs, staging,
+  publishing, versions, experiments, functions, apps, voices, and reporting fields
+- `references/computer-agent-configuration.md` for durable Computer Agent behavior and the
+  boundary between Agent configuration and operational Computer resources
+
 ## Authentication and Request Rules
 
 - Auth is query param only: `token=<VIDA_API_KEY>`
@@ -55,10 +62,11 @@ ID rules:
 
 - `targetAccountId`: query parameter that scopes the API request to the Vida agent account.
 - Organization account IDs contain child agent accounts; they are not the normal edit scope for a Computer Agent.
-- Campaign/config IDs identify agent config records; do not use them as `targetAccountId`.
+- `agentConfigId` identifies an Agent configuration record; do not use it as `targetAccountId`.
 - `accountId`: body field that owns the created task and controls which agent account sends call/SMS/email tasks.
 - For the current Computer Agent, `accountId` should normally equal `targetAccountId`.
-- For agent configuration route paths, the path value is the Vida agent account id.
+- For configuration and version route paths, the path value named `agentConfigId` is an Agent
+  configuration ID, not an account ID.
 
 ## Input Validation Checklist
 
@@ -70,6 +78,9 @@ Before mutation calls, validate:
 - required fields from OpenAPI are present
 
 ## Computer Agent setup and operations
+
+Read `references/computer-agent-configuration.md` before setting durable Computer Agent behavior.
+It identifies what belongs in Agent staging/publish and what belongs in the operational APIs below.
 
 The authenticated Computer Agent API is rooted at:
 
@@ -732,60 +743,14 @@ Common fields:
 
 ### 6) Edit and publish agents
 
-Primary lifecycle endpoints:
+Read `references/voice-agent-configuration.md` before editing an Agent. It is the complete workflow
+for current configuration fields, dynamic catalogs, versions, experiments, functions, apps, voice,
+language, and source-attributed reporting fields.
 
-- `GET /api/v2/agent/{agentAccountId}`
-- `GET /api/v2/agentEventRules/staging`
-- `GET /api/v2/agentEventRules/default`
-- `POST /api/v2/agent` (create/update the scoped account's staging agent config)
-- `POST /api/v2/agent/publish`
-- `POST /api/v2/agent/revert`
-- `GET /api/v2/agent/{agentAccountId}/versions`
-- `POST /api/v2/agent/{agentAccountId}/versions`
-
-Safe update flow:
-
-1. If starting from an organization account, list child agent accounts with `GET /api/v2/listAccounts?targetOrganizationId=<orgAccountId>` and choose the Computer Agent to edit.
-2. Use the selected agent account ID as `targetAccountId`; do not use the org account ID or a campaign/config ID as the edit scope.
-3. Read current staging with `GET /api/v2/agentEventRules/staging?targetAccountId=<agentAccountId>`; if empty, read live/default with `GET /api/v2/agentEventRules/default?targetAccountId=<agentAccountId>`.
-4. Modify the returned staging/default config object, preserving required fields such as `agentPaymentType`, `billParentAccount`, and `agentInstructions`.
-5. Update staging via `POST /api/v2/agent?targetAccountId=<agentAccountId>`.
-6. Publish via `POST /api/v2/agent/publish?targetAccountId=<agentAccountId>` only when live publish is intended.
-7. Verify by re-reading `GET /api/v2/agentEventRules/default?targetAccountId=<agentAccountId>` and checking that the expected config is live.
-
-#### Structured reporting fields
-
-Use `reportingFields` on the agent config to collect typed facts from every
-completed conversation. Values are written to the conversation/log `meta`
-object and can be used as dashboard metric fields.
-
-Each field requires:
-
-- `key`: stable lowercase key using letters, numbers, and underscores
-- `label`: dashboard label
-- `instructions`: an exact definition of when each value applies
-- `values.kind`: `boolean`, `choices`, `number`, or `text`
-- `values.choices`: required, unique allowed strings for `choices`
-
-Define null behavior explicitly. The reporting evaluator uses `null` when a
-value cannot be determined. Do not treat unknown, no-answer, or inconclusive
-interactions as `false` unless that is the field's stated meaning. A boolean
-reporting-field metric calculates its rate over conversations where the value
-was reported, so its instructions define the denominator.
-
-Reporting fields follow the normal staging and publish flow. Preserve existing
-fields unless the user explicitly asks to replace or remove them.
-
-Example field:
-
-```json
-{
-  "key": "follow_up_accepted",
-  "label": "Follow-up accepted",
-  "instructions": "True only when the person explicitly accepts follow-up; false only when they explicitly decline; null when no decision is obtained.",
-  "values": { "kind": "boolean" }
-}
-```
+Agent writes are staging-first. Read staging, discover dynamic choices, change only intended
+writable settings, re-read staging, test, publish only with explicit intent, and verify live. Never
+use an `agentConfigId` as account scope. Treat response-only function eligibility, active slots,
+and effective reporting fields as read-only annotations.
 
 #### Dashboard metrics
 
@@ -840,55 +805,10 @@ Use that terminal-attempt denominator for overall workflow yield. Validate the
 definition against live log data before saving it; do not substitute
 answered-conversation counts for Task-attempt counts.
 
-#### Agent experiments
-
-Experiments compare saved versions of one agent configuration. The platform
-deterministically assigns conversations and Tasks to weighted variants,
-preserves the assignment across retries, and records it on conversation
-metadata and Task attempt history. Do not manually assign contacts or Tasks to
-variants.
-
-Primary endpoints:
-
-- `GET /api/v2/experiments?targetAccountId=<agentAccountId>&campaignId=<campaignId>`
-- `POST /api/v2/experiments?targetAccountId=<agentAccountId>`
-- `PUT /api/v2/experiments/{experimentId}?targetAccountId=<agentAccountId>`
-- `POST /api/v2/experiments/{experimentId}/status?targetAccountId=<agentAccountId>`
-- `DELETE /api/v2/experiments/{experimentId}?targetAccountId=<agentAccountId>`
-
-Create the candidate agent configurations as saved versions first. Experiment
-variants contain a `versionId` and positive `weight`; at least two distinct
-versions are required. Only one experiment may be active for a campaign.
-Variants may be changed only while the experiment is a draft, and an active
-experiment must be paused or ended before deletion.
-
-For useful comparisons:
-
-- change one meaningful configuration dimension at a time
-- use the same reporting-field definitions across every variant
-- compare results using `experiments.id` and `experiments.versionId` in logs,
-  plus the experiment object on Task attempts
-- report sample size and denominator with every rate; do not declare a winner
-  from a handful of conversations
-
-Critical behavior:
-
-- Agent edits are always staging-first. Publish promotes the scoped account's staging config to live/default.
-- Do not construct a tiny partial payload from `GET /api/v2/agent/{agentAccountId}` because that endpoint may return only a thin shell.
-- Do not assume including an arbitrary existing `id` in `POST /api/v2/agent` updates that exact config in place. The endpoint updates the scoped account's staging config.
-- If the response says `Campaign created` or returns a new `campaignId` you did not intend, stop immediately and report the mismatch before further writes.
-
-For durable prompt/config changes, treat agent config JSON as the source of truth.
-
-- Do not edit synced managed blocks in `AGENTS.md`, `HEARTBEAT.md`, or `TOOLS.md` directly when changing durable config.
-- Use this flow for fields such as:
-  - `agentInstructions`
-  - `adminInstructions`
-  - `heartbeatInstructions`
-  - `heartbeatEvery`
-  - `links`
-  - `skills`
-- `GET /api/v2/agent/{agentAccountId}` is still useful when you already know the exact Vida agent account id you want to inspect, but the event-rules endpoint is the safer default read path for self-updates because it resolves the current live slot first.
+Saved versions and experiments use the live `agentConfigId`, not the account ID. Create candidate
+versions before an experiment, preserve assignments across retries, keep reporting definitions
+consistent across variants, and report sample size and denominator. The reference contains the full
+route and lifecycle contract.
 
 ### 7) Find logs for troubleshooting and reporting
 
@@ -1373,10 +1293,15 @@ EOF
 
 ```bash
 curl -s "$VIDA_API_BASE_URL/api/v2/agentEventRules/staging?token=$VIDA_API_KEY&targetAccountId=$TARGET_ACCOUNT_ID" > staging-agent.json
-# Edit staging-agent.json, preserving required fields from the returned object, then:
+# Inspect staging-agent.json, then send only the writable settings you intend to change:
 curl -s -X POST "$VIDA_API_BASE_URL/api/v2/agent?token=$VIDA_API_KEY&targetAccountId=$TARGET_ACCOUNT_ID" \
   -H "content-type: application/json" \
-  --data-binary @staging-agent.json
+  --data-binary @- <<EOF
+{
+  "agentInstructions": "Complete updated instructions",
+  "timezone": "America/Chicago"
+}
+EOF
 ```
 
 ### Publish agent

@@ -1,0 +1,120 @@
+# Voice Agent Configuration
+
+Read this reference when creating, editing, publishing, versioning, or experimenting with a Vida Agent configuration. The live OpenAPI at `https://vida.io/docs/apiv2.json` remains authoritative for exact request and response schemas.
+
+## Identity and scope
+
+- `targetAccountId` is the stable Vida account that owns the agent. Use it to scope requests.
+- `agentConfigId` is the ID of a staging, live, or saved agent configuration record. Staging and live normally have different IDs.
+- `versionId` identifies a saved snapshot.
+
+Never use an `agentConfigId` as `targetAccountId`. Public requests and explanations must use `agentConfigId`; do not introduce alternate configuration-ID terminology.
+
+## Read, change, verify, publish
+
+1. Read `GET /api/v2/agentEventRules/staging?targetAccountId=...`.
+2. If staging is empty, read `GET /api/v2/agentEventRules/default?targetAccountId=...` for the live configuration.
+3. Save the original response before editing.
+4. Discover dynamic values and account eligibility:
+   - `GET /api/v2/models/supported?targetAccountId=...`
+   - `GET /api/v2/agent/voices?targetAccountId=...`
+   - `GET /api/v2/agent/functions?targetAccountId=...`
+   - `GET /api/v2/apps?targetAccountId=...`
+5. Send only intended writable settings to `POST /api/v2/agent?targetAccountId=...`. Omitted settings retain their staging values.
+6. Re-read staging and compare every intended field.
+7. Test staging when the change affects conversations or tool behavior.
+8. Publish only with explicit intent using `POST /api/v2/agent/publish?targetAccountId=...`.
+9. Re-read `/agentEventRules/default` and verify the live values.
+
+Arrays such as `actions`, `apps`, `skills`, and `reportingFields` are complete authored arrays when supplied. Read and preserve members the user did not ask to remove. Do not write calculated response fields such as function `allowed`, `reason`, or `missingRequirement`, `activeEventRules`, or `effectiveReportingFields`.
+
+## Intelligence
+
+- `agentModel` is the primary model for voice, messaging, and Computer Agent work.
+- `agentThinking` configures supported reasoning on the primary model.
+- `agentThinkingModel` selects the model used by Pause & Think and optional post-conversation reasoning.
+- `postConvoForceThinking` uses that thinking model for post-conversation work when appropriate.
+
+Always select exact model IDs from the account-aware supported-model response. Do not rely on a copied model list.
+
+## Voice and language
+
+Select the exact `agentVoice` from `/agent/voices`. Check `accountAvailability.available`, `languages`, `compatibleS2SEngines`, and `supportsStandardTts` before saving it.
+
+- `agentS2SEngine: null` uses separate speech recognition and synthesis. Configure `agentSttEngine`, `agentTtsEngine`, and `agentVoice` for this mode.
+- `agentS2SEngine: "openai"` or `"gemini"` enables the corresponding speech-to-speech mode. Use only a compatible voice and language returned by discovery.
+- `agentLang` is the Vida language mode. Follow the OpenAPI enum and the selected voice's advertised languages.
+
+Do not migrate the frontend's hard-coded catalog or invent voice IDs. The API catalog is the integration source of truth.
+
+## Functions
+
+Read `/agent/functions` before editing `actions`.
+
+- Store the returned `name` exactly in `actions[].name`.
+- Check `allowed` and resolve `missingRequirement` before publishing.
+- Use `placeholder` and the function's `docsPage` to write focused `instructions`.
+- `limit` is the maximum supported instances when present.
+- `hasSettings` means the function also uses related root-level configuration.
+
+The API intentionally does not add function-specific validation beyond the current Agent update behavior. Use the function guide and current configuration shape; do not infer unsupported fields.
+
+Root-level relationships include transfer confirmation/monitoring/attended-transfer controls, recording notice settings, speech timing, the thinking model for Pause & Think, and typed reporting fields. Read the OpenAPI `AgentConfigurationWrite` schema for the complete approved writable set.
+
+## Apps
+
+Use the app lifecycle API to discover and prepare an app before assigning it to an agent:
+
+- `GET /api/v2/apps?targetAccountId=...`
+- `GET /api/v2/apps/{appId}/{appVersion}?targetAccountId=...`
+- `POST /api/v2/apps/{appId}/{appVersion}?targetAccountId=...`
+- `PUT /api/v2/apps/{appId}/{appVersion}?targetAccountId=...`
+- `DELETE /api/v2/apps/{appId}/{appVersion}?targetAccountId=...`
+
+Read dependency/setup state first, make the smallest change, and re-read it. Then assign the app in staging with `apps[]` using its exact `appId`, `version`, instructions, and enabled state. Test before publishing. Do not use internal app execution routes as a setup API.
+
+## Reporting fields
+
+`reportingFields` contains agent-authored typed fields. Each field has a stable `key`, display `label`, precise `instructions`, and `values.kind` of `boolean`, `choices`, `number`, or `text`. A choices field also supplies `values.choices`.
+
+Define when a result is `null`; do not turn unknown or inconclusive outcomes into `false`. Reads may include `effectiveReportingFields`, the final reseller → organization → agent merge. Each effective field reports its winning `source`. Treat that list as read-only; write only the agent's own `reportingFields`.
+
+## Saved versions
+
+Use the live `agentConfigId` in saved-version paths:
+
+- `GET /api/v2/agent/{agentConfigId}/versions`
+- `POST /api/v2/agent/{agentConfigId}/versions`
+- `POST /api/v2/agent/{agentConfigId}/versions/{versionId}`
+- `DELETE /api/v2/agent/{agentConfigId}/versions/{versionId}`
+- `POST /api/v2/agent/{agentConfigId}/versions/{versionId}/restore`
+- `PUT /api/v2/agent/{agentConfigId}/versions/{versionId}/title`
+
+A new version snapshots staging by default; use the documented `source` value when saving live instead. Replacing changes the named snapshot, not staging or live. Restore targets staging by default; publish afterward if the restored configuration should become live. A version referenced by an active experiment or Task may not be deletable.
+
+## Experiments
+
+Experiments distribute new work deterministically across saved versions of one live agent configuration. Use `agentConfigId` consistently:
+
+- `GET /api/v2/experiments?targetAccountId=...&agentConfigId=...`
+- `POST /api/v2/experiments?targetAccountId=...`
+- `GET /api/v2/experiments/{experimentId}?targetAccountId=...`
+- `PUT /api/v2/experiments/{experimentId}?targetAccountId=...`
+- `POST /api/v2/experiments/{experimentId}/status?targetAccountId=...`
+- `DELETE /api/v2/experiments/{experimentId}?targetAccountId=...`
+
+Create candidate saved versions first. Each variant uses a numeric `versionId` and positive `weight`, with at least two distinct versions. Variants can change only while draft. Only one experiment may be active for the agent configuration. Pause or end it before deletion. Preserve the same reporting-field definitions across variants and report sample size and denominator with every comparison.
+
+## Completion evidence
+
+For a configuration change, record:
+
+- `targetAccountId`
+- staging and live `agentConfigId` values used
+- exact fields changed
+- staging re-read evidence
+- publish response, if published
+- live re-read evidence
+- any saved `versionId` or `experimentId`
+
+An accepted write is not verification. Do not claim the live agent changed until the live read proves it.
