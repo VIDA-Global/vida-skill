@@ -27,6 +27,9 @@ Use this skill only for Vida API operations.
 
 - OpenAPI (primary source): `https://vida.io/docs/apiv2.json`
 - API base URL: environment variable `VIDA_API_BASE_URL`
+- Skill source and updates: `https://github.com/VIDA-Global/vida-skill`
+- Installed copies are Vida-managed. When maintaining this skill, update the source repository
+  rather than editing a bundled copy.
 
 If endpoint behavior is unclear, read the OpenAPI file first and follow it over assumptions.
 
