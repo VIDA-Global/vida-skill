@@ -28,7 +28,7 @@ These are not versioned Agent settings and use purpose-built APIs:
 | Skill package installation, setup, OAuth/device flows | `/skills` |
 | Managed credentials | `/secrets` |
 | Customer-authored project and skill files | `/workspace` |
-| Browser access, recording, and reusable helpers | `/browser`, `/workflow-recordings`, `/browser-functions` |
+| Browser access, recording, and reusable helpers | `/browser`, `/workflow-recordings`, `/helpers` |
 | Memory | `/memory` |
 | Immediate or scheduled work | standard `/api/v2/tasks` |
 | Sessions and replicated chats | `/session`, `/api/v2/computer/sessions`, `/api/v2/messages` |

@@ -114,7 +114,7 @@ Normal Vida agent configuration still belongs in the staging/publish flow under
    terminal.
 8. Read each resource immediately before changing it, make the smallest change, and re-read it.
 9. Verify capabilities from their actual surfaces: channel status, skill verification, Task run
-   history, workspace reads, bounded runtime logs, or browser-helper results.
+   history, workspace reads, bounded runtime logs, or helper results.
 10. Report the account id, endpoint, returned job/resource ids, and verification evidence.
 
 Never claim an accepted lifecycle job, channel login start, cron-backed Task run request, backup, restore,
@@ -180,7 +180,7 @@ Use `POST /prompts/sync` to restore the published instructions when they have dr
 every returned per-agent failure. `POST /session/resolve` returns the
 Vida room for an authorized session; an explicit sessionKey must belong to the selected agent.
 
-### Workspace files and browser automation
+### Workspace files, helpers, and browser automation
 
 Use the workspace endpoints for customer-authored project files, skill files, data, and automation
 artifacts. Vida-managed root configuration files are not workspace content: they do not appear in
@@ -196,7 +196,7 @@ Read and discovery:
   `limit`; omit `path` to find matching files and folders across the workspace
 - `POST /workspace/search` with required `path` and plain-text `pattern`; optional `glob`,
   `ignoreCase`, `context` (0..5), and `limit` (1..200)
-- `GET  /browser-functions`
+- `GET  /helpers`
 
 Text mutations:
 
@@ -216,15 +216,39 @@ Uploads protect existing files unless `overwrite=true` is explicit. Directories 
 remove their contents explicitly before deleting them. Workspace operations block Vida-managed
 configuration and internal/system roots.
 
+Reusable helper endpoints:
+
+- `GET  /helpers`
+- `POST /helpers/execute` with an exact registered `name` and optional object `arguments`
+
+Helpers are reusable Computer Agent functions. A helper may use Browser access or may run without a
+browser for API, file, or data work. Treat the helper listing as the callable contract: it includes
+the argument schema, `requiresBrowser`, owning `skillSlug`, and IDs of any `requiredSecrets`. Never
+send secret values to `/helpers/execute`; Vida resolves only the declared IDs from the selected
+Agent's managed secrets, using an organization value only as an inherited fallback.
+
+Reusable source belongs with its skill under `skills/{skillSlug}/helpers/*.py`. Use
+`@browser_function(...)` for Browser-backed helpers and include a stable `start_url`. Use
+`@computer_function(...)` for helpers that do not need Browser access. Declare credentials as
+`required_secrets=["secret/id"]` and read them at invocation time with
+`from vida_helper_runtime import managed_secret`; do not accept credentials as helper arguments,
+read arbitrary environment variables, or persist values in code. The runtime generates
+`helper-workspace/helpers.json`; older Agents may still use the legacy Browser workspace and registry
+names. Do not edit generated registries or move a legacy workspace by hand.
+
+Installing, updating, or uninstalling a skill refreshes its registered helpers. Browser recording
+generation also refreshes the registry. After either workflow, re-read `/helpers` and execute a
+safe representative call. Helper execution is synchronous; an `ok` transport response is not a
+substitute for checking the returned helper status and business result.
+
 Browser automation endpoints:
 
-- `POST /browser-functions/execute` with `name` and optional object `arguments`
 - `POST /browser/ticket` for short-lived interactive access; open the returned `launchRef.href`
 - `POST /browser/automation-sessions` with optional `ttlSeconds` from 60..1800
 - `GET  /workflow-recordings/status`
 - `POST /workflow-recordings/start` with the automation session's `slot` as `slotId`
 - `POST /workflow-recordings/stop`
-- `POST /workflow-recordings/{domainKey}/generate`
+- `POST /workflow-recordings/{domainKey}/generate` with optional `skillName`
 - `POST /workflow-recordings/{domainKey}/{recordingId}/delete`
 
 Use a browser automation session when the task needs direct browser control or a new reusable
@@ -243,13 +267,15 @@ To create a reusable helper:
 2. Start recording with the session's exact `slot` as `slotId`.
 3. Perform the workflow through the returned CDP connection.
 4. Stop recording and retain its returned `domainKey` and `recordingId`.
-5. Start generation for that domain and poll recording status until generation is terminal.
+5. Start generation for that domain and poll recording status until generation is terminal. When
+   the domain contains customer-specific information or would make a poor reusable name, supply a
+   neutral `skillName`; save the returned `skillSlug` for reporting and reset verification.
 6. Use the generation's `conversationRef.resolve` request to find its Vida chat while work is in
    progress; the resolution response's `chatRef` points to the replicated messages and tool calls.
-7. Re-read `/browser-functions`, then execute the registered helper with representative
+7. Re-read `/helpers`, then execute the registered helper with representative
    arguments and verify the result.
 
-Only execute helpers returned by the browser-functions listing or otherwise known to be registered.
+Only execute helpers returned by the helper listing or otherwise known to be registered.
 Delete a recording only when the user intends to discard it; do not reset a generated domain merely
 to retry a failed run.
 
