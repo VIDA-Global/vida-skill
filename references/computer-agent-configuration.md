@@ -142,7 +142,13 @@ visibility, source and published paths, and a ready-to-open reference when acces
 public Canvas has a stable `publicUrl`; a private Canvas has only a short-lived `launchRef`; an off
 Canvas has neither. Visibility currently follows the Computer's existing setting and is read-only
 through the Canvas API. After editing source, call `POST /canvas/publish`, require
-`published:true`, then read `/canvas` again and open the returned URL to verify the actual result.
+`published:true`, `phase:"complete"`, and `dependencies.status` of `ready` or `updated`. Publishing
+synchronizes dependencies declared by the Canvas project when its package inputs changed or its
+build tooling is unavailable; do not create a Computer Task merely to run a package install or
+build. If publishing fails in the `dependencies` phase, inspect the dependency output. If it fails
+in the `build` phase, inspect the project-relative compiler output. When dependency synchronization
+updates the lockfile, read the authored workspace files back before making another package change. Then read
+`/canvas` again and open the returned URL to verify the actual result.
 Keep credentials and privileged operations out of browser-delivered Canvas code; use managed
 secrets and helpers for those operations.
 
