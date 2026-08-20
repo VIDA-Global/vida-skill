@@ -98,10 +98,12 @@ Read `/agent/functions` before editing `actions`.
 
 For a stable operation that is not already a built-in function, create and verify an exact helper
 on a provisioned Computer Agent. Use `@computer_function(...)` for API, file, or data work that does
-not need Browser access, and `@browser_function(...)` only for Browser-backed work. Set
-`computerDelegateAccountId`, configure the exact `computer` action returned by the catalog, and map
-conversation values to the registered helper's exact argument names. Use ordinary Computer
-delegation for novel or multi-step work rather than forcing it into one helper.
+not need Browser access, and `@browser_function(...)` only when the helper requires the live Browser.
+Configure the exact `computer` action returned by the catalog and map conversation values to the
+registered helper's exact argument names. A Computer Agent uses its own Computer automatically; set
+`computerDelegateAccountId` only when it must use another Agent's Computer. The `browser` action is
+for ad hoc live-Browser work, not registered helpers. Use ordinary Computer delegation for novel or
+multi-step work rather than forcing it into one helper.
 
 The API intentionally does not add function-specific validation beyond the current Agent update behavior. Use the function guide and current configuration shape; do not infer unsupported fields.
 

@@ -132,6 +132,12 @@ summaries. An empty `/runs` response while work is active is not evidence that n
 not a reason to force another run. Delete the Task to remove future execution. Do not manufacture
 `meta.cron` or `cron:job:` identifiers.
 
+For every proactive workflow, confirm that its trigger actually exists. A configured helper and
+instructions do not create a schedule. For poll-and-act workflows, define timezone, per-run limits,
+opaque source identifiers, deduplication, capacity checks, and ambiguity-safe writeback. Create the
+repeating Task paused, force one representative run, inspect its linked chat and destination effects,
+then activate it deliberately.
+
 ## Batches
 
 Before creating a batch, reconcile active and prior Tasks with stable source metadata. Save the

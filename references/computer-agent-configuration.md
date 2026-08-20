@@ -39,9 +39,10 @@ Read the existing resource before mutation, make the smallest change, and verify
 
 Create a reusable helper when another Agent needs one stable callable operation. Store its source
 with the owning skill, use `@computer_function(...)` when Browser access is unnecessary, configure
-its declared Agent secrets, and verify its exact contract through `/helpers`. To use it during voice
-or messaging conversations, configure the conversational Agent's `computerDelegateAccountId` and
-`computer` action through the normal staging and publish flow.
+its declared Agent secrets, and verify its exact contract through `/helpers`. A Computer Agent uses
+its own Computer automatically. Set `computerDelegateAccountId` only when an Agent must use a
+different Agent's Computer. Registered helpers are exposed through the `computer` action; the
+`browser` action is for ad hoc work in the live Browser.
 
 ## Initial setup order
 
@@ -128,6 +129,8 @@ change durable Agent behavior through Agent configuration instead.
   public deletion.
 
 Paths are relative to the selected Agent workspace. Read or list first and verify after every write.
+When writing a JSON document, `content` is still a JSON string containing the document text, not a
+nested object. Encode it once as the request body's string value.
 
 Canvas is the Computer Agent's static React application. Its editable source is under `app/`, which
 is intentionally omitted from ordinary workspace-root listings but can be addressed directly with
@@ -161,10 +164,10 @@ List helpers with `GET /helpers`; the returned name, argument schema, `requiresB
 required-secret IDs are the callable contract. Execute an exact name with `POST /helpers/execute`
 and verify both its structured result and its destination effect.
 
-To expose a helper during a voice or messaging conversation, set the conversational Agent's
-`computerDelegateAccountId`, add the exact allowed `computer` action returned by Agent function
-discovery, and map conversation values to the helper's registered arguments. Use ordinary Computer
-delegation for novel multi-step work.
+To expose a helper during a voice or messaging conversation, add the exact allowed `computer`
+action returned by Agent function discovery and map conversation values to the helper's registered
+arguments. Set `computerDelegateAccountId` only when the helper belongs to another Agent's Computer.
+Use ordinary Computer delegation for novel multi-step work.
 
 ## Browser access and workflow generation
 
@@ -178,13 +181,33 @@ delegation for novel multi-step work.
 
 Use the returned launch link directly rather than constructing a Browser URL. For automation,
 request the returned CDP `/json/version` with its header and connect to the returned WebSocket before
-expiry.
+expiry. For local CDP automation, Browser Harness is the recommended client: fetch `/json/version`
+with the required header, then provide the returned ticket-bearing `webSocketDebuggerUrl` as
+`BU_CDP_WS`. Do not give Browser Harness the protected discovery URL as `BU_CDP_URL` when it cannot
+send the required discovery header.
 
 Before recording, confirm no recording or generation is active. Start with the automation session's
 exact slot, perform one representative workflow, stop, retain `domainKey`, `recordingId`, and the
-returned `evidenceRoot`, then generate. Supply a neutral `skillName` when a domain contains customer
-information or would create a poor reusable name. Follow the generation conversation reference
-while it runs. When terminal, re-list helpers and run a safe representative invocation.
+returned `evidenceRoot`, then require `finalized:true` and `analysisStatus:"completed"` before
+generating. Supply a neutral `skillName` when a domain contains customer information or would create
+a poor reusable name. A generation uses the immutable `recordingIds` snapshot returned when it
+starts; if new evidence is recorded, start a new generation rather than assuming it was appended.
+Follow the generation conversation reference and status `phase`, `updatedAt`, and `lastActivityAt`
+while it runs.
+
+Do not treat generation success as complete acceptance. Prove all three layers independently:
+
+1. The expected helper appears in `/helpers` with the correct inputs, result metadata, owner, Browser
+   requirement, and required-secret IDs.
+2. A safe representative `/helpers/execute` call succeeds and every runtime result field callers
+   depend on is declared in the registered result metadata; verify the destination effect when one
+   is expected.
+3. Agent function discovery exposes the intended Computer capability, and a staged conversational
+   test can actually select and use the helper. Confirm these checks in the environment that will
+   run the Agent.
+
+Preserve opaque identifiers returned by helpers byte-for-byte. Do not replace them with numeric IDs
+in a visible application URL unless the helper contract explicitly says they are interchangeable.
 
 ## Memory, sessions, tools, and scheduled work
 
