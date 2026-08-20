@@ -59,6 +59,12 @@ For a Vida-managed phone number:
 4. For an already-owned number, use `POST /api/v2/phoneNumber/byo/assign?targetAccountId=...` instead of purchasing another number.
 5. Verify assignment with `GET /api/v2/phoneNumbers?targetAccountId=...` and run an authorized inbound or outbound test. Returning a number with `POST /api/v2/phoneNumber/return` disconnects it and requires explicit confirmation.
 
+For high-volume outbound Task workflows, Vida can optionally configure a managed pool of assigned
+numbers for the organization. This requires contacting Vida; there is no public self-service pool
+management API. After enablement, verify the Agent's assigned inventory with
+`GET /api/v2/phoneNumbers?targetAccountId=...` and test representative call or text Tasks before
+increasing volume.
+
 For SIP connectivity:
 
 Choose the topology first; these resources are not interchangeable:

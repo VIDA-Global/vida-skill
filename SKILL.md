@@ -39,6 +39,8 @@ Load the smallest relevant reference before configuration work:
   publishing, versions, experiments, functions, apps, voices, and reporting fields
 - `references/computer-agent-configuration.md` for durable Computer Agent behavior and the
   boundary between Agent configuration and operational Computer resources
+- `references/platform-administration.md` for account hierarchy, customer onboarding, optional
+  reseller/partner capabilities, templates, access, inbound email, webhooks, and domains
 
 Use the public workflow guides when a user needs an explanation, decision framework, or conceptual
 overview in addition to the executable rules in this skill:
@@ -60,6 +62,14 @@ overview in addition to the executable rules in this skill:
   `https://vida.io/docs/api-reference/platform-guides/contacts-and-objectives`
 - Logs, conversations, and reporting:
   `https://vida.io/docs/api-reference/platform-guides/logs-conversations-and-reporting`
+- Accounts, access, and onboarding:
+  `https://vida.io/docs/api-reference/platform-guides/accounts-access-and-onboarding`
+- Reseller Agent templates:
+  `https://vida.io/docs/api-reference/platform-guides/agent-templates`
+- Integrations, inbound email, and webhooks:
+  `https://vida.io/docs/api-reference/platform-guides/integrations-email-and-webhooks`
+- White-label domains and embedded access:
+  `https://vida.io/docs/api-reference/platform-guides/white-label-domains-and-embed`
 
 The OpenAPI document remains authoritative for request shape. These guides explain product concepts
 and multi-step workflows; this skill adds operational sequencing, safety rules, and request templates.
@@ -682,6 +692,13 @@ that component from `defaultRetryConfiguration` when configured. Explicit
 values replace the corresponding default; they are not field-merged. Supply
 both fields explicitly when a workflow requires an exact goal and cadence.
 
+Outbound call and text Tasks may use a managed number pool when Vida has enabled
+and configured that optional capability for the organization. Pool management is
+not a public self-service API. Do not call internal pool-control routes or imply
+that every account has a pool. Ask the user to contact Vida for enablement, then
+verify assigned inventory with `GET /api/v2/phoneNumbers?targetAccountId=...`
+and run a representative Task before scaling volume.
+
 Use `context` and `taskContext` for information the agent needs while doing the
 work. `meta` is retained for filtering and reporting but is not added to the
 agent prompt.
@@ -919,7 +936,7 @@ Important query params:
 - `includeFields` (returns schema)
 - `format=json|csv`
 - `targetAccountId`
-- additional log-field query params are filters; append operators such as `__gte`, `__in`,
+- additional log-field query params are filters; append comparison suffixes such as `__gte`, `__in`,
   `__icontains`, or `__isnull` as documented in OpenAPI
 
 Use `format=csv` for exports and large analysis pulls. Use
