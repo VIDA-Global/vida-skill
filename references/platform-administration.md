@@ -120,7 +120,7 @@ White-label domains and embedded application access are optional reseller capabi
 2. Register with `POST /api/v2/domain` only after completing the supplied domain setup.
 3. Re-read, set the default with `POST /api/v2/domain/default`, and verify it.
 4. The current default cannot be removed. Select another default first, then call
-   `DELETE /api/v2/domain` using the exact documented JSON body.
+   `DELETE /api/v2/domain` with the exact registered domain in the `domain` query parameter.
 5. Verify DNS, HTTPS, login, and customer navigation in the actual domain.
 
 For embed access, resolve the customer organization, verify the signed-in user in the caller's own

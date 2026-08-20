@@ -50,7 +50,7 @@ different Agent's Computer. Registered helpers are exposed through the `computer
 2. Create or update Agent staging with instructions, an available `agentModel`, heartbeat behavior, and assigned skill instructions.
 3. Read staging back. Publish only when approved and verify live.
 4. Read the Computer account status and provision only if no usable deployment exists.
-5. Wait for lifecycle completion and verify runtime health.
+5. Wait for lifecycle completion and verify Computer health.
 6. Install and verify required skills; complete their setup actions and authentication in dependency order.
 7. Configure channels and complete any user login flow; probe status.
 8. Add customer-authored workspace artifacts or browser helpers.
@@ -70,7 +70,9 @@ include:
 - `GET /backups`, `POST /backup`, backup job reads, `POST /restore`, and restore job reads.
 
 Lifecycle, repair, backup, and restore operations can be asynchronous. Poll account or job status to a
-terminal state, then verify health and the affected capability. Use paginated activity logs for
+terminal state, then verify health and the affected capability. An unprovisioned status read returns
+404. Provision and upgrade normally take no deployment options: Vida selects its current published
+version, and upgrade safely refreshes managed workspace templates. Use paginated activity logs for
 Agent work and bounded service logs for startup or service failures. Diagnostics are read-only and
 return stable finding codes even when their human-readable details vary.
 
@@ -79,9 +81,11 @@ supported Computer-wide settings with that current revision. Preserve redacted v
 replace an array only when the user intends complete replacement. Durable Agent instructions, model,
 heartbeat, knowledge, and assigned skills still belong in staging and publish.
 
-Create a backup before destructive lifecycle work. Normal deprovisioning preserves saved state;
-`wipeState:true` permanently removes it and requires explicit intent. Confirm the exact restore
-snapshot and deletion behavior, wait for completion, then verify both status and health.
+One organization Computer can serve multiple assigned Agents. Provisioning can reconcile it, while
+restart, upgrade, and deprovision affect every assigned Agent. Create a backup before destructive
+lifecycle work. Normal deprovisioning preserves saved state; `wipeState:true` permanently removes it,
+requires explicit intent, and first requires a successful recent safety backup. Confirm the exact
+restore snapshot and deletion behavior, wait for completion, then verify both status and health.
 
 ## Skills, setup, and credentials
 
