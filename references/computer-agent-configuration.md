@@ -164,6 +164,11 @@ List helpers with `GET /helpers`; the returned name, argument schema, `requiresB
 required-secret IDs are the callable contract. Execute an exact name with `POST /helpers/execute`
 and verify both its structured result and its destination effect.
 
+After creating or changing helper source through the workspace API, call `POST /helpers/refresh`.
+Require `ok:true`, inspect every compile and registry finding, then list and execute the helper.
+Load [helper-authoring.md](helper-authoring.md) for the stable runtime imports, a complete
+Browser-independent API helper, and the full acceptance workflow.
+
 To expose a helper during a voice or messaging conversation, add the exact allowed `computer`
 action returned by Agent function discovery and map conversation values to the helper's registered
 arguments. Set `computerDelegateAccountId` only when the helper belongs to another Agent's Computer.
