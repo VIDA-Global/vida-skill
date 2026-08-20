@@ -67,6 +67,11 @@ Use `context` for Contact or situation facts and `taskContext` for instructions 
 Task `meta` is retained for filtering and reporting but is not automatically added to the Agent
 prompt.
 
+Whenever a Task has an associated Vida room, its response includes `chatRef` with the room ID,
+selected Agent account, and a ready-to-use Messages API URL. The field can be absent before a room
+has been created. Use `chatRef` for the complete linked chat; use `conversationRef` for one specific
+communication attempt and `runsRef` for terminal scheduled-run summaries.
+
 ## Communication Tasks and retries
 
 Call, text, and email Tasks require the documented target and channel-specific content. Read Task
@@ -104,8 +109,8 @@ and reporting metadata. Do not add communication targets, retry policies, Contac
 session fields.
 
 Vida creates a dedicated linked chat. Poll the Task to `finished`, `errored`, or `canceled`, then use
-its `chatRef` or `roomId` with the Messages API to inspect the complete work, tool activity, and
-result. Cancel with a scoped Task update to `state:"canceled"`. Delete only with explicit intent;
+its `chatRef` with the Messages API to inspect the complete work, tool activity, and result. Cancel
+with a scoped Task update to `state:"canceled"`. Delete only with explicit intent;
 deletion stops active work before removing the Task record.
 
 ## Repeating and one-off Tasks
@@ -121,8 +126,11 @@ Create schedules through the Task API, not private metadata:
 Scheduled Task updates accept only the documented title, task context, state, and timing fields.
 Run a controlled test with `/tasks/{taskId}/run`; `force` runs regardless of due time while `due`
 uses due-only behavior. A `202` proves acceptance, not completion. Inspect `/tasks/{taskId}/runs`;
-`/logs` is communication history, not scheduled-run history. Delete the Task to remove future
-execution. Do not manufacture `meta.cron` or `cron:job:` identifiers.
+`/logs` is communication history, not scheduled-run history. Once `chatRef` appears, follow it for
+the Agent's live work and tool calls; `/runs` contains compact terminal status, timing, and error
+summaries. An empty `/runs` response while work is active is not evidence that nothing ran and is
+not a reason to force another run. Delete the Task to remove future execution. Do not manufacture
+`meta.cron` or `cron:job:` identifiers.
 
 ## Batches
 

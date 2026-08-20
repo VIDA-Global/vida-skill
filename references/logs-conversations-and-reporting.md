@@ -27,7 +27,8 @@ attempt can include `conversationRef`; follow it instead of guessing room or mes
 - `GET /api/v2/conversation/{roomId}/{uuid}` returns one complete conversation.
 - `POST /api/v2/conversation/batch` expands a bounded set.
 - `GET /api/v2/messages/{roomId}` returns room messages.
-- Computer Tasks and sessions expose linked Vida chats containing work, tool calls, and results.
+- Any Task with an associated room exposes a scoped `chatRef`; Computer and scheduled Task chats
+  contain the Agent's work, tool calls, and results.
 
 Keep room, message, Task, Contact, Agent-account, and Agent-configuration IDs distinct in analysis.
 

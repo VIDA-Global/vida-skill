@@ -116,7 +116,8 @@ working connection. Use `/channels/logout` only with explicit intent and verify 
 ## Workspace files and reusable helpers
 
 Workspace routes manage customer-authored project, skill, data, and automation files. Vida-managed
-root configuration is hidden and blocked; change it through Agent configuration instead.
+root configuration and runtime-state files are hidden and blocked from customer workspace APIs;
+change durable Agent behavior through Agent configuration instead.
 
 - `/workspace/read`, `/workspace/list`, `/workspace/find`, and `/workspace/search` inspect content.
 - `/workspace/write` writes complete text.
@@ -150,9 +151,11 @@ arguments. Helper secrets are Agent-scoped; the runtime resolves the selected Ag
 an organization-level value only as an inherited fallback. Do not pass secret values as helper
 arguments. Do not edit generated helper registries.
 
-The current generated registry lives under `helper-workspace`. Older Computers can still use the
-legacy `browser-harness-workspace` name; do not move it manually. Skill lifecycle and Browser
-generation refresh registration for either supported layout.
+The current helper and recording root is `helper-workspace`. Older Computers can still use the
+legacy `browser-harness-workspace` name; do not move or copy evidence manually. Recorder and
+generation status return the selected workspace-relative `evidenceRoot`, and starting new work
+adopts finalized legacy recording bundles when a canonical root already exists. Skill lifecycle and
+Browser generation refresh registration for either supported layout.
 
 List helpers with `GET /helpers`; the returned name, argument schema, `requiresBrowser`, owner, and
 required-secret IDs are the callable contract. Execute an exact name with `POST /helpers/execute`
@@ -178,10 +181,10 @@ request the returned CDP `/json/version` with its header and connect to the retu
 expiry.
 
 Before recording, confirm no recording or generation is active. Start with the automation session's
-exact slot, perform one representative workflow, stop, retain `domainKey` and `recordingId`, then
-generate. Supply a neutral `skillName` when a domain contains customer information or would create a
-poor reusable name. Follow the generation conversation reference while it runs. When terminal,
-re-list helpers and run a safe representative invocation.
+exact slot, perform one representative workflow, stop, retain `domainKey`, `recordingId`, and the
+returned `evidenceRoot`, then generate. Supply a neutral `skillName` when a domain contains customer
+information or would create a poor reusable name. Follow the generation conversation reference
+while it runs. When terminal, re-list helpers and run a safe representative invocation.
 
 ## Memory, sessions, tools, and scheduled work
 
