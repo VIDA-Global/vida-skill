@@ -77,6 +77,13 @@ Read `/agent/functions` before editing `actions`.
 - `limit` is the maximum supported instances when present.
 - `hasSettings` means the function also uses related root-level configuration.
 
+For a stable operation that is not already a built-in function, create and verify an exact helper
+on a provisioned Computer Agent. Use `@computer_function(...)` for API, file, or data work that does
+not need Browser access, and `@browser_function(...)` only for Browser-backed work. Set
+`computerDelegateAccountId`, configure the exact `computer` action returned by the catalog, and map
+conversation values to the registered helper's exact argument names. Use ordinary Computer
+delegation for novel or multi-step work rather than forcing it into one helper.
+
 The API intentionally does not add function-specific validation beyond the current Agent update behavior. Use the function guide and current configuration shape; do not infer unsupported fields.
 
 Root-level relationships include transfer confirmation/monitoring/attended-transfer controls, recording notice settings, speech timing, the thinking model for Pause & Think, and typed reporting fields. Read the OpenAPI `AgentConfigurationWrite` schema for the complete approved writable set.

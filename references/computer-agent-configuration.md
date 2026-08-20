@@ -36,6 +36,12 @@ These are not versioned Agent settings and use purpose-built APIs:
 
 Read the existing resource before mutation, make the smallest change, and verify through that same resource's status or read endpoint.
 
+Create a reusable helper when another Agent needs one stable callable operation. Store its source
+with the owning skill, use `@computer_function(...)` when Browser access is unnecessary, configure
+its declared Agent secrets, and verify its exact contract through `/helpers`. To use it during voice
+or messaging conversations, configure the conversational Agent's `computerDelegateAccountId` and
+`computer` action through the normal staging and publish flow.
+
 ## Initial setup order
 
 1. Resolve the exact child account and its `targetAccountId`.

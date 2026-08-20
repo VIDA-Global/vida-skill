@@ -227,6 +227,29 @@ the argument schema, `requiresBrowser`, owning `skillSlug`, and IDs of any `requ
 send secret values to `/helpers/execute`; Vida resolves only the declared IDs from the selected
 Agent's managed secrets, using an organization value only as an inherited fallback.
 
+When a conversational Agent needs a stable operation that is not already a built-in function,
+prefer an exact helper over free-form delegation. This is especially useful during voice calls,
+where inputs and results should be predictable. Build the helper on a provisioned Computer Agent,
+verify it directly, then expose it through the conversational Agent's `computer` function:
+
+1. Put the implementation and its usage instructions in one owning skill under
+   `skills/{skillSlug}/`.
+2. Use `@computer_function(...)` when the operation can run without Browser access. Use
+   `@browser_function(...)` only when it needs the Computer Agent's Browser session.
+3. Configure every declared `requiredSecrets` ID as an Agent managed secret.
+4. Re-read `GET /helpers`, match the exact registered name and argument contract, and execute a safe
+   representative call through `POST /helpers/execute`.
+5. In the conversational Agent's staging configuration, set `computerDelegateAccountId` to that
+   Computer Agent and add or update the exact `computer` action returned by `/agent/functions`.
+6. Write action instructions that say when to use the helper and map conversation values to the
+   helper's exact argument names. The voice function call supplies these values in
+   `computer.helper.arguments`; descriptive task text does not populate helper arguments.
+7. Verify the staged function is allowed, test the staged Agent, then publish only with explicit
+   intent and verify the live configuration.
+
+Use ordinary Computer delegation instead when the work is novel, exploratory, or requires the
+Computer Agent to plan several steps rather than invoke one known contract.
+
 Reusable source belongs with its skill under `skills/{skillSlug}/helpers/*.py`. Use
 `@browser_function(...)` for Browser-backed helpers and include a stable `start_url`. Use
 `@computer_function(...)` for helpers that do not need Browser access. Declare credentials as
