@@ -28,6 +28,7 @@ These are not versioned Agent settings and use purpose-built APIs:
 | Skill package installation, setup, OAuth/device flows | `/skills` |
 | Managed credentials | `/secrets` |
 | Customer-authored project and skill files | `/workspace` |
+| Canvas source, publishing, and access | `/canvas` plus `/workspace` |
 | Browser access, recording, and reusable helpers | `/browser`, `/workflow-recordings`, `/helpers` |
 | Memory | `/memory` |
 | Immediate or scheduled work | standard `/api/v2/tasks` |
@@ -126,6 +127,20 @@ root configuration is hidden and blocked; change it through Agent configuration 
   public deletion.
 
 Paths are relative to the selected Agent workspace. Read or list first and verify after every write.
+
+Canvas is the Computer Agent's static React application. Its editable source is under `app/`, which
+is intentionally omitted from ordinary workspace-root listings but can be addressed directly with
+the workspace read, list, find, search, write, edit, upload, preview, download, and single-path
+delete operations. Treat `public/` as protected generated output; do not edit it directly.
+
+Read `GET /canvas` before Canvas work. It returns the effective `public`, `private`, or `off`
+visibility, source and published paths, and a ready-to-open reference when access is available. A
+public Canvas has a stable `publicUrl`; a private Canvas has only a short-lived `launchRef`; an off
+Canvas has neither. Visibility currently follows the Computer's existing setting and is read-only
+through the Canvas API. After editing source, call `POST /canvas/publish`, require
+`published:true`, then read `/canvas` again and open the returned URL to verify the actual result.
+Keep credentials and privileged operations out of browser-delivered Canvas code; use managed
+secrets and helpers for those operations.
 
 Reusable helper source belongs with its owning skill under `skills/{skillSlug}/helpers/`. Use
 `@computer_function(...)` for API, file, and data work that does not require Browser access, and
