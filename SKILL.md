@@ -1,6 +1,6 @@
 ---
 name: vida-api
-description: "Operational guide for Vida API usage only: auth, contacts, tasks, Computer Agent setup and operations, logs, and conversation details."
+description: "Operational guide for Vida API usage: auth, Agent configuration, contacts, tasks, Computer Agent setup and operations, logs, and conversations."
 ---
 
 # Vida API Skill
@@ -39,6 +39,28 @@ Load the smallest relevant reference before configuration work:
   publishing, versions, experiments, functions, apps, voices, and reporting fields
 - `references/computer-agent-configuration.md` for durable Computer Agent behavior and the
   boundary between Agent configuration and operational Computer resources
+
+Use the public workflow guides when a user needs an explanation, decision framework, or conceptual
+overview in addition to the executable rules in this skill:
+
+- Agent API guide index: `https://vida.io/docs/api-reference/agent-guides/overview`
+- Agent versions and experiments:
+  `https://vida.io/docs/api-reference/agent-guides/versions-and-experiments`
+- Computer Agent lifecycle and support:
+  `https://vida.io/docs/api-reference/agent-guides/computer-agent-operations`
+- Computer Agent skills, credentials, and channels:
+  `https://vida.io/docs/api-reference/agent-guides/computer-agent-skills-and-channels`
+- Workspaces, helpers, and browser automation:
+  `https://vida.io/docs/api-reference/agent-guides/computer-agent-workspaces-and-helpers`
+- Tasks and automation:
+  `https://vida.io/docs/api-reference/platform-guides/tasks-and-automation`
+- Contacts and objectives:
+  `https://vida.io/docs/api-reference/platform-guides/contacts-and-objectives`
+- Logs, conversations, and reporting:
+  `https://vida.io/docs/api-reference/platform-guides/logs-conversations-and-reporting`
+
+The OpenAPI document remains authoritative for request shape. These guides explain product concepts
+and multi-step workflows; this skill adds operational sequencing, safety rules, and request templates.
 
 ## Authentication and Request Rules
 
