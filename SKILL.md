@@ -46,6 +46,8 @@ overview in addition to the executable rules in this skill:
 - Agent API guide index: `https://vida.io/docs/api-reference/agent-guides/overview`
 - Agent versions and experiments:
   `https://vida.io/docs/api-reference/agent-guides/versions-and-experiments`
+- Phone numbers and SIP:
+  `https://vida.io/docs/api-reference/agent-guides/telephony`
 - Computer Agent lifecycle and support:
   `https://vida.io/docs/api-reference/agent-guides/computer-agent-operations`
 - Computer Agent skills, credentials, and channels:
@@ -824,6 +826,22 @@ writable settings, re-read staging, test, publish only with explicit intent, and
 use an `agentConfigId` as account scope. Treat response-only function eligibility, active slots,
 and effective reporting fields as read-only annotations.
 
+#### Measurement-first setup
+
+Define measurement before publishing an Agent or starting an experiment:
+
+1. Name the business outcome and choose the unit being measured: conversation, Task attempt, or one
+   terminal outcome per Task. Do not mix those denominators.
+2. Add stable typed `reportingFields` for outcomes that are not already represented by standard log
+   fields. Prefer boolean, choices, or number over free text, and define when the value is `null`.
+3. Test representative success, failure, and uncertain cases. Confirm the reported values in bounded
+   log queries before building a metric from them.
+4. Validate the metric with `POST /api/v2/logs/timeSeries`, including its filters, formula,
+   aggregation, event count, and time range. Save it to organization dashboard settings only after
+   the result matches the underlying logs.
+5. Capture a baseline before changing the Agent. For an experiment, keep the same reporting fields,
+   metric definition, population, and denominator across every variant.
+
 #### Dashboard metrics
 
 Organization dashboard metrics are stored in the organization account's
@@ -877,10 +895,14 @@ Use that terminal-attempt denominator for overall workflow yield. Validate the
 definition against live log data before saving it; do not substitute
 answered-conversation counts for Task-attempt counts.
 
-Saved versions and experiments use the live `agentConfigId`, not the account ID. Create candidate
-versions before an experiment, preserve assignments across retries, keep reporting definitions
-consistent across variants, and report sample size and denominator. The reference contains the full
-route and lifecycle contract.
+Saved versions and experiments use the live `agentConfigId`, not the account ID. Before creating an
+experiment, write down the hypothesis, primary metric, denominator, and any guardrail metrics. Save
+and verify candidate versions that differ only in the intended test where practical. Preserve
+assignments across retries, and keep reporting definitions, audience, channel mix, and metric time
+range comparable across variants. Use the returned event counts and `minimumSampleSize`; do not call
+a winner from a rate without its denominator. Pause an experiment before changing its variants or
+when a guardrail indicates customer harm. The reference contains the full route and lifecycle
+contract.
 
 ### 7) Find logs for troubleshooting and reporting
 

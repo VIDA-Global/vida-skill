@@ -61,11 +61,24 @@ For a Vida-managed phone number:
 
 For SIP connectivity:
 
-1. Check address availability with `POST /api/v2/sip/registration/available?targetAccountId=...`.
-2. Create or update registration with `POST /api/v2/sip/registration?targetAccountId=...`. Follow OpenAPI for address, authentication, proxy, port, transport, and subscription fields; do not copy the password into Agent instructions, workspace files, logs, or chat.
-3. Verify with `GET /api/v2/sip/registration?targetAccountId=...` and a representative call.
-4. Use the documented IP whitelist or outbound-route APIs only when the selected SIP topology requires them and the caller has the required permission. Read the current list first and verify it after mutation.
-5. Deleting a registration, whitelist entry, or outbound route can interrupt calls. Require explicit confirmation and verify the resulting state.
+Choose the topology first; these resources are not interchangeable:
+
+- **Agent registration to an external PBX:** check the address with
+  `POST /api/v2/sip/registration/available?targetAccountId=...`, create or update it with
+  `POST /api/v2/sip/registration?targetAccountId=...`, then verify it with
+  `GET /api/v2/sip/registration?targetAccountId=...` and representative inbound/outbound calls.
+- **Direct inbound SIP to Vida:** read `GET /api/v2/sip/ipWhitelist?targetAccountId=...`, then add
+  each approved source signaling IP with `POST /api/v2/sip/ipWhitelist?targetAccountId=...`.
+  Re-read the list and test the Agent's SIP URI from an allowed source.
+- **Direct outbound SIP from Vida:** read `GET /api/v2/sip/outboundRoutes?targetAccountId=...`, add
+  the exact approved destination with `POST /api/v2/sip/outboundRoutes?targetAccountId=...`, then
+  re-read and place a representative outbound call.
+
+Follow OpenAPI for registration address, authentication, proxy, port, transport, and subscription
+fields, and for the exact whitelist/route payloads. IP allowlist and outbound-route operations require
+developer API access. Do not configure both a registration and a direct route unless the intended
+PBX topology needs both. Deleting a registration, whitelist entry, or outbound route can interrupt
+calls; require explicit confirmation and verify the resulting state.
 
 ## Functions
 
@@ -131,6 +144,14 @@ Experiments distribute new work deterministically across saved versions of one l
 - `DELETE /api/v2/experiments/{experimentId}?targetAccountId=...`
 
 Create candidate saved versions first. Each variant uses a numeric `versionId` and positive `weight`, with at least two distinct versions. Variants can change only while draft. Only one experiment may be active for the agent configuration. Pause or end it before deletion. Preserve the same reporting-field definitions across variants and report sample size and denominator with every comparison.
+
+Define the experiment's hypothesis, primary metric, denominator, and guardrails before activation.
+Where practical, change one behavior at a time between candidate versions. Establish a baseline and
+verify that every variant emits the same measurement fields before routing live work. Compare only
+like-for-like populations and time ranges, use event counts with metric values, and avoid declaring a
+winner from small or operationally different samples. Conversation and Task-attempt logs retain
+`experiments.id`, `experiments.variant`, and `experiments.versionId`; use those fields to inspect and
+filter variant results through the Logs and time-series APIs.
 
 ## Completion evidence
 
