@@ -38,8 +38,8 @@ before acting:
 - `references/logs-conversations-and-reporting.md`: bounded log queries, full conversations,
   metrics, experiment analysis, and incident evidence
 - `references/platform-administration.md`: account hierarchy, onboarding, members, tokens,
-  optional reseller/partner capabilities, templates, inbound-email policy, webhooks, domains, and
-  embedded access
+  optional reseller/partner capabilities, billing providers, templates, inbound-email policy,
+  webhooks, domains, and embedded access
 
 Use the public workflow guides for conceptual explanations:
 
@@ -49,6 +49,7 @@ Use the public workflow guides for conceptual explanations:
 - Contacts: `https://vida.io/docs/api-reference/platform-guides/contacts-and-objectives`
 - Logs and reporting: `https://vida.io/docs/api-reference/platform-guides/logs-conversations-and-reporting`
 - Account onboarding: `https://vida.io/docs/api-reference/platform-guides/accounts-access-and-onboarding`
+- Billing providers: `https://vida.io/docs/api-reference/platform-guides/billing-providers`
 - Integrations and webhooks: `https://vida.io/docs/api-reference/platform-guides/integrations-email-and-webhooks`
 
 ## Authentication and scope

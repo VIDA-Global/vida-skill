@@ -65,6 +65,34 @@ These arrays replace the current array at the supplied path. Read, preserve unre
 write the complete intended array, and re-read. Agent-level reporting fields remain part of Agent
 staging and publish.
 
+## Stripe and Chargebee billing providers
+
+Billing-provider configuration is optional and applies only to eligible reseller or partner
+accounts that bill downstream customers. Do not configure it for an ordinary organization.
+
+1. Read `GET /api/v2/account?targetAccountId=...` and confirm the exact reseller or partner account
+   that should own the connection.
+2. Read `GET /api/v2/billing/billingSystemConfig?targetAccountId=...`. A `404` means no provider is
+   configured. Returned credential values are redacted presence indicators and cannot be reused.
+3. Complete the provider-side setup in the Stripe or Chargebee guide, including the account-scoped
+   webhook URL and customer-facing plan mappings.
+4. Write the complete provider configuration with
+   `POST /api/v2/billing/billingSystemConfig?targetAccountId=...`.
+5. Re-read the configuration, then verify a representative checkout and subscription in both the
+   provider and Vida.
+
+Stripe writes require `billingSystemType`, `apiKey`, `publishableKey`, and `webhookSigningKey`.
+Chargebee writes require `billingSystemType`, `apiKey`, `publishableKey`, `site`,
+`webhookUsername`, and `webhookPassword`. A POST replaces the complete stored configuration; never
+combine new values with redacted values returned by GET. Use only fields declared by the current
+OpenAPI operation.
+
+Provider setup guides:
+
+- Stripe: `https://vida.io/docs/billing/stripe`
+- Chargebee: `https://vida.io/docs/billing/chargebee`
+- API workflow: `https://vida.io/docs/api-reference/platform-guides/billing-providers`
+
 ## Reseller Agent templates
 
 Templates are optional reseller resources. Ordinary organizations configure Agents directly.
