@@ -26,14 +26,27 @@ Check for `VIDA_API_KEY` first.
 
 If a key is present, do not recommend creating an Agent, upgrading an account, or obtaining a
 different key until you inspect the authenticated identity with `GET /api/v2/account` without a
-target parameter. Interpret the response as follows:
+target parameter. Classify the key by the first matching rule:
 
-- `superAdmin: true` identifies a Vida platform administrator. The key can perform authorized
-  platform-administration work across account hierarchies; `accountType` does not narrow that
-  access. Do not create or upgrade an Agent merely to broaden this key. Resolve the exact target
-  account and use the target parameter documented by each operation.
-- Otherwise, use the returned account type and hierarchy to determine the key's available scope.
-  Do not infer broader access from a username, email address, account ID, or employer.
+1. `superAdmin: true`: **Super Admin**. `accountType` does not narrow this access. Do not create or
+   upgrade an Agent merely to broaden the key.
+2. `accountType: "partner"`, or a nonempty `organizationId` that matches `partnerId`: **Partner
+   Admin**.
+3. `accountType: "reseller"`, or a nonempty `organizationId` that matches `resellerId`:
+   **Reseller Admin**.
+4. `accountType: "account"`: **Agent-specific key**.
+5. `accountType: "organization"`, or a remaining `accountType: "user"` with an
+   `organizationId`: **Organization Admin**.
+
+Stop and ask for the intended account scope if none of these rules match. ID matching handles human
+member accounts whose API identity is `user`. Preserve a returned nonempty `permittedAccountIds`
+list as a narrower boundary on that member's access. Do not infer broader access from a username,
+email address, account ID, or employer.
+
+This classification describes hierarchy scope, not access to every operation. Keep `active`,
+`vidaPremium`, account features, and operation-specific requirements separate. Do not probe
+unrelated partner, reseller, or account-list endpoints merely to see which ones fail. After
+classification, test only the harmless read needed for the user's actual task.
 
 Keep this requester identity separate from accounts read later with `targetAccountId`. A targeted
 account response describes that selected account; it does not replace or reduce the requester's
@@ -124,10 +137,9 @@ curl -s "$VIDA_API_BASE_URL/api/v2/account?token=$VIDA_API_KEY"
 
 Resolve identity before making a scoped request:
 
-- Treat `superAdmin: true` in the untargeted authenticated account response as
-  platform-administrator access. It is independent of `accountType`. Still resolve and verify the
-  exact target before a mutation; administrator access does not authorize work the user did not
-  request.
+- Use the privilege classification from the untargeted account preflight. Still resolve and verify
+  the exact target before a mutation; broader hierarchy access does not authorize work the user did
+  not request.
 - `targetAccountId` selects an authorized Vida account. Use it on account-scoped operations unless
   the account is already in the path or the operation explicitly uses another scope parameter.
 - `accountId` owns a newly created Task. For Agent work it normally matches `targetAccountId`.
