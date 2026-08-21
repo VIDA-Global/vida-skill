@@ -41,7 +41,7 @@ Always select exact model IDs from the account-aware supported-model response. D
 
 Select the exact `agentVoice` from `/agent/voices`. Check `accountAvailability.available`, `languages`, `compatibleS2SEngines`, and `supportsStandardTts` before saving it.
 
-- `agentS2SEngine: null` uses separate speech recognition and synthesis. Configure `agentSttEngine`, `agentTtsEngine`, and `agentVoice` for this mode.
+- `agentS2SEngine: null` uses separate speech recognition and synthesis. Configure `agentSttEngine` and select the exact `agentVoice`; Vida selects the matching text-to-speech provider from that voice.
 - `agentS2SEngine: "openai"` or `"gemini"` enables the corresponding speech-to-speech mode. Use only a compatible voice and language returned by discovery.
 - `agentLang` is the Vida language mode. Follow the OpenAPI enum and the selected voice's advertised languages.
 
