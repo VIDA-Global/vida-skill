@@ -52,6 +52,16 @@ Use the public workflow guides for conceptual explanations:
 - Billing providers: `https://vida.io/docs/api-reference/platform-guides/billing-providers`
 - Integrations and webhooks: `https://vida.io/docs/api-reference/platform-guides/integrations-email-and-webhooks`
 
+Use the public cookbooks when the request spans several resource families:
+
+- Launch an Agent: `https://vida.io/docs/api-reference/cookbooks/launch-an-agent`
+- Run outbound work: `https://vida.io/docs/api-reference/cookbooks/outbound-workflow`
+- Investigate Agent work: `https://vida.io/docs/api-reference/cookbooks/investigate-agent-work`
+- Onboard a reseller customer: `https://vida.io/docs/api-reference/cookbooks/onboard-reseller-customer`
+
+Cookbooks define the end-to-end acceptance flow. This skill and its selected references still
+control account scope, safety, request construction, and verification.
+
 ## Authentication and scope
 
 Vida API authentication uses the `token` query parameter:

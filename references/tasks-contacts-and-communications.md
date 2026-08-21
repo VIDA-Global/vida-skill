@@ -164,3 +164,7 @@ For an `email.received` event:
 
 Do not treat a queue response as delivery, conversation, or goal completion. Verify the terminal
 Task and linked communication evidence.
+
+For a complete retry-aware communication workflow, use
+`https://vida.io/docs/api-reference/cookbooks/outbound-workflow` with this reference and current
+OpenAPI schemas.

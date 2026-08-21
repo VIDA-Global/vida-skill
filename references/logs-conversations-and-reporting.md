@@ -80,3 +80,7 @@ For a customer-impacting event:
 
 A useful incident report identifies scope, timestamps, evidence references, current state, customer
 impact, and remaining uncertainty. Keep raw diagnostics separate from the customer-facing conclusion.
+
+For a complete incident sequence, use
+`https://vida.io/docs/api-reference/cookbooks/investigate-agent-work` with this reference and current
+OpenAPI schemas.

@@ -169,3 +169,7 @@ claim it is self-service. After Vida enables it, verify assigned number inventor
 Record the authenticated account type, selected parent and target IDs, created or changed resource
 IDs, post-write reads, and one representative capability test. Accepted writes and queued operations
 are not completion evidence.
+
+For a complete eligible-reseller onboarding sequence, use
+`https://vida.io/docs/api-reference/cookbooks/onboard-reseller-customer` with this reference and
+current OpenAPI schemas.

@@ -174,3 +174,7 @@ For a configuration change, record:
 - any saved `versionId` or `experimentId`
 
 An accepted write is not verification. Do not claim the live agent changed until the live read proves it.
+
+For a complete account-through-production sequence, use
+`https://vida.io/docs/api-reference/cookbooks/launch-an-agent` with this reference and current
+OpenAPI schemas.
