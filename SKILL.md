@@ -20,6 +20,15 @@ and response schemas.
 Read the current OpenAPI operation before constructing a request. Do not infer a field, method,
 permission, or response shape from memory when the operation is documented.
 
+## Related workflow skill
+
+When the request is to turn a software workflow into a complete Vida Agent—including optional
+opportunity research, browser helpers, schedules, Canvas, demo videos, landing pages, or launch
+content—use [`$build-vida-agent`](https://github.com/VIDA-Global/build-vida-agent-skill).
+That skill orchestrates the end-to-end build and uses this `vida-api` skill for every exact Vida API
+operation, scope decision, safety boundary, and verification step. Do not load it for ordinary API
+operation of an already-finished Agent.
+
 ## Load the relevant reference
 
 Read only the references needed for the current workflow, but read each selected reference fully
