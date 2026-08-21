@@ -167,19 +167,18 @@ operation attempted, expected and observed behavior, relevant response or other 
 and a realistic acceptance or regression scenario. Never include tokens, credentials, customer data,
 private hosts, or identifying account details.
 
-Route feedback only as follows:
-
-- `vida-api` instructions or workflow guidance: `https://github.com/VIDA-Global/vida-skill`
-- Vida API contract, generated API reference, permissions, or platform/runtime behavior:
-  `https://github.com/VIDA-Global/vida.live`
+Submit reusable feedback to `https://github.com/VIDA-Global/vida-skill`. This includes skill
+guidance and user-visible friction with the Vida API contract, generated reference, permissions, or
+platform behavior encountered while following the skill. Describe observed public behavior and its
+impact without speculating about private implementation details.
 
 Search existing issues and pull requests before publishing. Use an issue when ownership, root cause,
 or the correct fix is uncertain. Open a draft pull request only for a narrow, verified correction
 with a realistic regression scenario. Do not create either automatically: obtain the user's
 authorization for the external write and disclose that the report or change was agent-authored.
-Link any resulting issue or pull request in the completion report. Findings outside the two routes
-above stay in the work log and are reported to the user; do not publish them to another repository
-under this protocol.
+Link any resulting issue or pull request in the completion report. Findings that cannot be safely
+reported in the public skill repository stay in the work log and are reported privately to the user;
+do not publish them to another repository under this protocol.
 
 ## Error handling
 
