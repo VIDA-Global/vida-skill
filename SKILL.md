@@ -20,6 +20,32 @@ and response schemas.
 Read the current OpenAPI operation before constructing a request. Do not infer a field, method,
 permission, or response shape from memory when the operation is documented.
 
+## Obtain API access
+
+Check for `VIDA_API_KEY` before attempting an API request. If it is missing, guide the signed-in
+user through creating a key for the narrowest account scope that can complete the work:
+
+- **One Agent:** open the Agent, then **Settings → Developer → API Keys**
+  (`https://vida.io/app/agent/{agentAccountId}/settings/developer`). This key is appropriate for
+  operating that Agent account.
+- **Reseller and its customers:** open **For Developers → API Keys**
+  (`https://vida.io/app/reseller/{resellerAccountId}/forDevelopers/developer`). Use a reseller key
+  when the work requires the reseller's authorized downstream organizations or Agents.
+- **Partner and its resellers:** open **Settings → Advanced → API Keys**
+  (`https://vida.io/app/partner/{partnerAccountId}/settings/developer`). Use this only for an
+  eligible partner-level workflow.
+
+Have the user select **New Key**, give it a recognizable purpose, and store the returned value in a
+secure environment or secret manager as `VIDA_API_KEY`. Never ask the user to paste the key into
+chat, a workspace file, a Task, or a work log. If the API Keys item or key creation is unavailable,
+the selected account may lack the required access or paid plan; direct the user to the account's
+upgrade flow or Vida support instead of choosing a broader account silently. See
+`https://vida.io/docs/api-reference/authentication`.
+
+The first key cannot be created through `/api/v2/tokens` because that operation already requires
+authentication. After the user securely supplies the key, verify it with `GET /api/v2/account` and
+confirm the returned account type and hierarchy before performing scoped work.
+
 ## Related workflow skill
 
 When the request is to turn a software workflow into a complete Vida Agent—including optional
