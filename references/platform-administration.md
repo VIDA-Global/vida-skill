@@ -15,9 +15,14 @@ Not every customer has every hierarchy level.
 - An Agent account owns one Agent's configuration, Tasks, communications, and optional Computer
   Agent resources.
 
-Read `GET /api/v2/account` first. Never invent a reseller or partner layer for an ordinary
-organization. Use reseller templates, white-label domains, downstream feature assignment, or
-partner reseller settings only when the authenticated account is eligible for that operation.
+Read `GET /api/v2/account` without a target parameter first. If it returns `superAdmin: true`, the
+key belongs to a Vida platform administrator and is not limited by the returned `accountType`;
+resolve the exact target for each operation instead of creating an Agent or obtaining a narrower
+key. Keep that requester identity separate from accounts read later with `targetAccountId`.
+Otherwise, never invent a reseller or partner layer for an ordinary organization. Use reseller
+templates, white-label domains, downstream feature assignment, or partner reseller settings only
+when the authenticated account is eligible for that operation. Never infer platform-administrator
+access from a username, email address, account ID, or employer.
 
 ## Identity and scope
 

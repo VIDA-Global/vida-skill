@@ -22,8 +22,25 @@ permission, or response shape from memory when the operation is documented.
 
 ## Obtain API access
 
-Check for `VIDA_API_KEY` before attempting an API request. If it is missing, guide the signed-in
-user through creating a key for the narrowest account scope that can complete the work:
+Check for `VIDA_API_KEY` first.
+
+If a key is present, do not recommend creating an Agent, upgrading an account, or obtaining a
+different key until you inspect the authenticated identity with `GET /api/v2/account` without a
+target parameter. Interpret the response as follows:
+
+- `superAdmin: true` identifies a Vida platform administrator. The key can perform authorized
+  platform-administration work across account hierarchies; `accountType` does not narrow that
+  access. Do not create or upgrade an Agent merely to broaden this key. Resolve the exact target
+  account and use the target parameter documented by each operation.
+- Otherwise, use the returned account type and hierarchy to determine the key's available scope.
+  Do not infer broader access from a username, email address, account ID, or employer.
+
+Keep this requester identity separate from accounts read later with `targetAccountId`. A targeted
+account response describes that selected account; it does not replace or reduce the requester's
+authenticated access.
+
+If the key is missing, guide the signed-in user through creating a key for the narrowest account
+scope that can complete the work:
 
 - **One Agent:** open the Agent, then **Settings → Developer → API Keys**
   (`https://vida.io/app/agent/{agentAccountId}/settings/developer`). This key is appropriate for
@@ -43,8 +60,8 @@ upgrade flow or Vida support instead of choosing a broader account silently. See
 `https://vida.io/docs/api-reference/authentication`.
 
 The first key cannot be created through `/api/v2/tokens` because that operation already requires
-authentication. After the user securely supplies the key, verify it with `GET /api/v2/account` and
-confirm the returned account type and hierarchy before performing scoped work.
+authentication. After the user securely supplies the key, restart this preflight with
+`GET /api/v2/account` before performing scoped work.
 
 ## Related workflow skill
 
@@ -107,6 +124,10 @@ curl -s "$VIDA_API_BASE_URL/api/v2/account?token=$VIDA_API_KEY"
 
 Resolve identity before making a scoped request:
 
+- Treat `superAdmin: true` in the untargeted authenticated account response as
+  platform-administrator access. It is independent of `accountType`. Still resolve and verify the
+  exact target before a mutation; administrator access does not authorize work the user did not
+  request.
 - `targetAccountId` selects an authorized Vida account. Use it on account-scoped operations unless
   the account is already in the path or the operation explicitly uses another scope parameter.
 - `accountId` owns a newly created Task. For Agent work it normally matches `targetAccountId`.
