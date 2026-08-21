@@ -157,6 +157,30 @@ and representative capability evidence. Include pagination state when a result m
 If an external login, approval, DNS change, payment, or other user action remains, identify it
 plainly and leave the result pending or blocked.
 
+## Improvement feedback
+
+When real Vida API work exposes a reusable gap, finish the user's task first when that remains safe
+and practical. Do not interrupt successful work merely to publish feedback.
+
+Record a sanitized reproduction in the current work log or completion evidence: the user's goal,
+operation attempted, expected and observed behavior, relevant response or other evidence, workaround,
+and a realistic acceptance or regression scenario. Never include tokens, credentials, customer data,
+private hosts, or identifying account details.
+
+Route feedback only as follows:
+
+- `vida-api` instructions or workflow guidance: `https://github.com/VIDA-Global/vida-skill`
+- Vida API contract, generated API reference, permissions, or platform/runtime behavior:
+  `https://github.com/VIDA-Global/vida.live`
+
+Search existing issues and pull requests before publishing. Use an issue when ownership, root cause,
+or the correct fix is uncertain. Open a draft pull request only for a narrow, verified correction
+with a realistic regression scenario. Do not create either automatically: obtain the user's
+authorization for the external write and disclose that the report or change was agent-authored.
+Link any resulting issue or pull request in the completion report. Findings outside the two routes
+above stay in the work log and are reported to the user; do not publish them to another repository
+under this protocol.
+
 ## Error handling
 
 - `401`: verify the token is present as the documented query parameter.
