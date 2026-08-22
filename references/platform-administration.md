@@ -123,14 +123,20 @@ an Agent preserves its current authored configuration but removes template owner
 
 ## Inbound email
 
-Inbound email belongs to the selected Agent account:
+Inbound email belongs to the selected Agent account. Vida applies this policy before creating an
+inbound message, emitting `email.received`, or waking the Agent. If an inbound-triggered workflow
+must reply to someone, configure that sender before testing.
 
 1. Read `GET /api/v2/email/inboundPolicy` and the current allowlist.
 2. Add approved senders before selecting `allowlist` mode.
-3. Use `open` only when any sender should be accepted.
+3. Use `open` only when any authenticated sender should be accepted.
 4. Re-read policy and allowlist, then send a representative authorized test email.
 
-Removing a sender affects delivery only while the policy uses `allowlist`.
+An unlisted sender in `allowlist` mode produces no inbound message or event. All inbound messages,
+including those received in `open` mode, must pass standard email authentication checks such as DKIM
+alignment. The allowlist controls inbound acceptance only; it does not restrict outbound recipients
+or replies to messages already accepted. Removing a sender affects delivery only while the policy
+uses `allowlist`.
 
 ## Webhooks and relays
 

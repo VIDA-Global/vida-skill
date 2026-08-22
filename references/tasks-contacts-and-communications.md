@@ -152,6 +152,12 @@ Convenience operations `POST /api/v2/agent/outboundCall`, `/outboundSms`, and `/
 create Tasks. Use the same Agent in query `targetAccountId` and body `accountId`. Follow OpenAPI for
 single versus multiple recipients, message content, subject, attachments, schedule, and spacing.
 
+Before relying on an inbound-triggered email reply, read the Agent's inbound policy and allowlist. In
+`allowlist` mode, the exact originating sender must already be listed; otherwise Vida creates no
+inbound message, `email.received` event, or Agent work. `open` mode accepts any sender that passes
+standard email authentication checks, including DKIM alignment. This gate affects inbound
+acceptance, not recipients passed to `/api/v2/agent/outboundEmail`.
+
 For an `email.received` event:
 
 1. Read `roomId`, `messageUuid`, `targetAccountId`, sender, and subject from the event.
