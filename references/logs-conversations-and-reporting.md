@@ -47,8 +47,23 @@ Keep numerator, denominator, filters, formula, aggregation, scaling, and time ra
 the returned event count with the metric value. For retry workflows, decide whether the denominator
 is attempts or terminal Tasks. Use `minimumSampleSize` when small groups should not produce a result.
 
-Organization dashboard definitions live in `settings.metrics`. Read the organization, preserve
-unrelated definitions, upsert by stable name, save the complete intended array, and re-read it.
+Organization dashboard definitions live in `settings.metrics`. Treat this as a complete replacement
+array, never an append operation. Never submit `[newMetric]` to add one metric.
+
+For every dashboard metric mutation:
+
+1. Read the exact organization with `GET /api/v2/account?targetAccountId=...` and retain the complete
+   original `settings.metrics` array, including order and unknown properties.
+2. If that array is absent or empty but the user expects metrics in the panel, stop. The dashboard
+   can be showing inherited or standard defaults that are not an authored organization array; do not
+   create a partial override.
+3. Validate the proposed definition through `POST /api/v2/logs/timeSeries`.
+4. Upsert by stable `name`: replace only the matching item or append the new item to the retained
+   array. Submit the complete result through `POST /api/v2/account`.
+5. Re-read the organization. Verify every original metric name remains, the intended definition is
+   correct, and no unrelated property changed.
+
+If verification finds an unexpected removal, stop and report it; do not issue another blind write.
 Agent-authored reporting fields remain in Agent staging; effective inherited fields are read-only.
 
 Useful patterns:

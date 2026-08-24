@@ -66,9 +66,12 @@ not available.
 - `settings.metrics` for an organization dashboard;
 - `settings.defaultOrgSettings.metrics` for reseller defaults on new organizations.
 
-These arrays replace the current array at the supplied path. Read, preserve unrelated entries,
-write the complete intended array, and re-read. Agent-level reporting fields remain part of Agent
-staging and publish.
+These arrays replace the current array at the supplied path; they do not append or merge entries.
+Read and retain the complete array, change only the intended entry, write the complete result, and
+re-read it. Never send only a new metric or reporting field unless the user explicitly intends to
+replace the entire list. If organization `settings.metrics` is absent or empty while the user expects
+visible dashboard metrics, stop: inherited or standard defaults may be displayed, and a partial
+write would override them. Agent-level reporting fields remain part of Agent staging and publish.
 
 ## Stripe and Chargebee billing providers
 
