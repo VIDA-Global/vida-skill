@@ -194,12 +194,15 @@ Use ordinary Computer delegation for novel multi-step work.
   Browser helpers.
 - `/{domainKey}/{recordingId}/delete` deletes one recording; domain reset is destructive.
 
-Use the returned launch link directly rather than constructing a Browser URL. For automation,
-request the returned CDP `/json/version` with its header and connect to the returned WebSocket before
-expiry. For local CDP automation, Browser Harness is the recommended client: fetch `/json/version`
-with the required header, then provide the returned ticket-bearing `webSocketDebuggerUrl` as
-`BU_CDP_WS`. Do not give Browser Harness the protected discovery URL as `BU_CDP_URL` when it cannot
-send the required discovery header.
+When giving a person access, return only `launchRef.href` as the Computer link. Never construct a
+viewer URL or expose `browserPath`, `browserProfile`, `noVncPath`, `noVncVncHtmlPath`,
+`externalNoVncUrl`, VNC, or noVNC implementation details from API or provisioning responses. If
+`launchRef.href` is absent, report that the Computer link could not be created instead of falling
+back to an implementation URL. For automation, request the returned CDP `/json/version` with its
+header and connect to the returned WebSocket before expiry. For local CDP automation, Browser
+Harness is the recommended client: fetch `/json/version` with the required header, then provide the
+returned ticket-bearing `webSocketDebuggerUrl` as `BU_CDP_WS`. Do not give Browser Harness the
+protected discovery URL as `BU_CDP_URL` when it cannot send the required discovery header.
 
 Before recording, confirm no recording or generation is active. Start with the automation session's
 exact slot, perform one representative workflow, stop, retain `domainKey`, `recordingId`, and the
