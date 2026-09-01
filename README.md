@@ -4,7 +4,7 @@ This repository is the source of truth for Vida's `vida-api` agent skill.
 
 The skill teaches agents how to use Vida's API for account onboarding, Agent configuration,
 contacts, Tasks, integrations, optional reseller administration, Computer Agent setup and
-operations, logs, and conversations. Review [SKILL.md](./SKILL.md) here.
+operations, safe Computer Agent cloning, logs, and conversations. Review [SKILL.md](./SKILL.md) here.
 
 For the complementary end-to-end workflow that turns a software opportunity into a configured,
 tested Vida Agent—with optional browser helpers, schedules, Canvas, demo videos, landing pages, and
