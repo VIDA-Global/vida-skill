@@ -136,6 +136,36 @@ Paths are relative to the selected Agent workspace. Read or list first and verif
 When writing a JSON document, `content` is still a JSON string containing the document text, not a
 nested object. Encode it once as the request body's string value.
 
+### Customer-authored workspace skills
+
+A directory under `skills/` is not a runtime skill merely because it contains helpers or a file named
+`SKILL.md`. Every customer-authored skill must use the exact path `skills/{skillSlug}/SKILL.md`, and
+the file must begin at its first byte with YAML frontmatter containing at least:
+
+```markdown
+---
+name: example-skill
+description: One concise sentence describing when the Agent should use this skill.
+---
+```
+
+Use a lowercase hyphenated `name` that exactly equals the directory name and the slug later assigned
+in the Agent configuration's `skills[]`. Do not place a heading, comment, blank line, or byte-order
+mark before the opening `---`. Keep `description` nonempty and specific enough for runtime selection.
+
+After writing the complete skill tree, read the remote `SKILL.md` back and call
+`GET /api/v2/computer/accounts/{targetAccountId}/skills/state`. In `runtimeStatus.skills`, require one
+exact entry whose `skillKey` equals `{skillSlug}`, `source` is `openclaw-workspace`, `filePath` points
+to the expected workspace `SKILL.md`, and `eligible` is `true`. Only then assign that slug in Agent
+staging. After publication, re-read the live `skills[]` and repeat the runtime-state check.
+
+`POST /helpers/refresh` validates helper source and registration; it does not prove that the owning
+skill loaded. A plain-Markdown `SKILL.md` can therefore have working registered helpers while the
+skill is absent from runtime discovery. In the Agent editor, that absence can cause a workspace-only
+slug to fall through to the catalog-detail route and display `Unable to load live skill detail.`
+The catalog-detail route is for catalog skills; do not use its 404 response as the acceptance test
+for a customer-authored workspace skill.
+
 Canvas is the Computer Agent's static React application. Its editable source is under `app/`, which
 is intentionally omitted from ordinary workspace-root listings but can be addressed directly with
 the workspace read, list, find, search, write, edit, upload, preview, download, and single-path

@@ -163,7 +163,9 @@ Use this sequence for every material workflow:
 1. Read the authenticated account and resolve the exact target resource.
 2. Read the current resource and the current OpenAPI operation.
 3. Discover account-specific choices such as models, voices, functions, Apps, skills, channels, or
-   features instead of copying catalog values.
+   features instead of copying catalog values. Before assigning a customer-authored workspace skill,
+   validate its required `SKILL.md` frontmatter and prove runtime discovery through `/skills/state`;
+   helper compilation alone does not prove that the skill itself loaded.
 4. Validate account scope, required fields, timestamps, phone formats, and destructive impact.
 5. Apply the smallest intended change. Preserve unrelated replacement-style arrays or objects.
 6. Re-read the resource.
