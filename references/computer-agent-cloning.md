@@ -13,8 +13,11 @@ the owning Computer, not for creating a portable customer template.
 Read both Agent accounts and compare their `organizationId` values before planning:
 
 - **Same organization:** one organization Computer can serve several assigned Agents. The normal
-  replication topology reuses that Computer's installed or authored capability while each Agent has
-  its own configuration and Browser profile. Confirm that shared Computer code and any approved
+  replication topology reuses the approved organization Computer deployment while each Agent has
+  its own configuration, Browser profile, and workspace. Sharing the Computer does not make one
+  Agent's customer-authored workspace skill or helper source visible to another Agent. Review and
+  recreate approved source in the target Agent workspace unless current API and runtime evidence
+  proves another supported topology. Confirm that shared Computer code and any approved
   organization-level secret fallback are intended.
 - **Different organizations:** create an independent sanitized capability on the target
   organization's Computer. Never point the target Agent's `computerDelegateAccountId` to the source
@@ -48,7 +51,7 @@ machine.
 | Agent model | Re-select from target supported models | Re-select from target supported models |
 | Agent and skill instructions | Reuse only after client review | Semantically sanitize into neutral instructions and target bindings |
 | Generic catalog skill | Reuse target-discovered catalog item | Install target-discovered catalog item |
-| Customer-authored skill/helper source | Review and test | Sanitize, place under a neutral target slug, and test |
+| Customer-authored skill/helper source | Review, recreate in the target Agent workspace, and test | Sanitize, place under a neutral target slug in the target Agent workspace, and test |
 | Generated or legacy `domain_helpers/` helper | Reuse only on the shared Computer | Rebuild under `skills/{neutralSlug}/helpers/` or generate from target-local evidence |
 | `computerDelegateAccountId` | May identify the approved organization Computer | Must resolve inside target scope |
 | Browser profile and login | Rebuild in the target Agent profile | Rebuild in the target Agent profile |
@@ -106,17 +109,22 @@ logs.
    approved, then poll to terminal lifecycle state and verify health.
 4. Write intended Agent fields to staging with `POST /api/v2/agent?targetAccountId=...`. Preserve
    unrelated replacement-style arrays, re-read staging, and test it before publish.
-5. Install target catalog skills or write sanitized authored skill/helper files through
-   `/workspace`. Read them back, call `/helpers/refresh`, require clean compile and registry
-   findings, then list the registered contracts.
+5. Install target catalog skills or write reviewed or sanitized authored skill/helper files through
+   the target Agent's `/workspace`. For every authored skill, require the exact
+   `skills/{skillSlug}/SKILL.md` path, first-byte YAML frontmatter with `name` and `description`, and
+   equality between the directory, frontmatter name, and staged skill slug. Read the files back, then
+   call `/skills/state` and require an exact `runtimeStatus.skills` entry with the expected
+   `skillKey`, `source: openclaw-workspace`, workspace `filePath`, and `eligible: true`. Separately
+   call `/helpers/refresh`, require clean compile and registry findings, and list the registered
+   contracts. Helper compilation alone does not prove that the owning skill loaded.
 6. Configure target-local secret values through `/secrets` and complete target Browser, channel,
    OAuth, or device login. Never transfer authentication state.
 7. Execute each helper with safe representative target input and verify its structured result and
    destination effect.
 8. Read target `/agent/functions`, stage the exact allowed Computer action, and run a staged
    conversation that actually selects and uses the helper.
-9. Publish only with explicit approval, re-read live configuration, and repeat the representative
-   capability test.
+9. Publish only with explicit approval, re-read live configuration, repeat `/skills/state`, and
+   repeat the representative capability test.
 
 Do not claim completion from an accepted write, provision request, helper refresh, login start, or
 publish response.
@@ -127,20 +135,23 @@ publish response.
 
 Agent A and Agent B belong to one organization. Agent A uses an organization Computer with a custom
 property-system skill. The accepted result proves Agent B is assigned to the intended organization
-Computer, uses its own Browser profile, discovers the approved helper contracts, completes any
-required login in that profile, and succeeds on representative target input. No memory, sessions,
-Tasks, or customer records are copied.
+Computer, the reviewed skill and helpers exist in Agent B's workspace, and Agent B's runtime skill
+state reports the expected workspace skill as eligible. Agent B uses its own Browser profile,
+discovers the approved helper contracts, completes any required login in that profile, and succeeds
+on representative target input. No memory, sessions, Tasks, or customer records are copied.
 
 ### Cross-organization sanitized clone
 
 A source organization has a Browser-based property-system integration. The accepted result creates
-a neutral target-owned skill and helpers, obtains the target tenant and login through target-local
-bindings and authorization, contains none of the source tenant's names, URLs, IDs, policies, data,
-or evidence, and passes representative read and write workflows in the target environment.
+a neutral target-owned skill and helpers in the target Agent workspace, proves the skill is eligible
+in target runtime state and its helpers are registered, obtains the target tenant and login through
+target-local bindings and authorization, contains none of the source tenant's names, URLs, IDs,
+policies, data, or evidence, and passes representative read and write workflows in the target
+environment.
 
 ## Completion evidence
 
 Report the clone mode and topology, source and target Agent and Computer-owner IDs, plan fingerprint,
 components reused/sanitized/rebuilt/excluded, staging and live `agentConfigId` values, helper
-contracts, target-local setup state, terminal Computer health, representative capability evidence,
-and any unresolved user action.
+contracts, target runtime skill state, target-local setup state, terminal Computer health,
+representative capability evidence, and any unresolved user action.
