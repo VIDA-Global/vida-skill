@@ -95,6 +95,9 @@ before acting:
 - `references/computer-agent-configuration.md`: Computer provisioning, configuration boundaries,
   health, logs, diagnostics, repair, backups, skills, credentials, channels, workspaces, Browser
   access, reusable helpers, memory, sessions, and schedules
+- `references/computer-agent-cloning.md`: same-organization functionality replication and
+  cross-organization sanitized cloning, including portable-resource boundaries, target-local
+  authentication, clone planning, and acceptance evidence
 - `references/helper-authoring.md`: exact Browser-independent helper source, managed-secret setup,
   registration, execution, and conversational acceptance workflow
 - `references/tasks-contacts-and-communications.md`: Contacts, objectives, communication and
