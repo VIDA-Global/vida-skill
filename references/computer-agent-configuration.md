@@ -103,7 +103,23 @@ Use this lifecycle for every Computer skill:
 7. For OAuth or device authorization, start the exact `/skills/{skillSlug}/auth/{actionId}/start`
    action, present the returned browser URL or device code, and poll the matching status operation to
    `succeeded`, `failed`, or `cancelled`.
-8. Verify again until setup is complete and the installed state reports ready.
+8. Verify again until `setupComplete:true` and the installed catalog view reports
+   `verifiedReady:true`. Do not treat legacy `ready:true` by itself as setup completion.
+
+Vida can verify an eligible Browser-independent helper-only catalog skill deterministically. The
+verification compares the promoted owned-helper contracts with the selected Computer's live helper
+registry and checks every declared helper secret in Agent-scoped managed-secret storage. Missing
+secrets appear in the ordinary `requiredActions` list as sensitive `enter_value` actions whose exact
+raw secret ID is the `storageKey` and whose payload declares
+`storageRoute:"managed_secret"`. Persist those exact IDs through `/secrets`, then run `/verify`
+again. Raw IDs are accepted in guided setup only when the promoted helper contract for that exact
+skill declares them.
+
+Helper-contract verification does not execute a helper. It proves runtime discovery, registry
+agreement, and credential presence without spending credits or causing a business mutation. After
+`verifiedReady:true`, execute one separately authorized safe representative helper call and inspect
+its structured result and destination effect. Skills with Browser authentication, binaries,
+runtime env/config, install steps, or manual setup retain the general verification flow.
 
 The Agent configuration's `skills[]` supplies Agent-specific usage instructions; it does not install
 or authenticate the package. Restricted Computer runtime credentials cannot manage secrets.
@@ -193,6 +209,10 @@ Reusable helper source belongs with its owning skill under `skills/{skillSlug}/h
 arguments. Helper secrets are Agent-scoped; the runtime resolves the selected Agent first and may use
 an organization-level value only as an inherited fallback. Do not pass secret values as helper
 arguments. Do not edit generated helper registries.
+
+When an owned helper skill is promoted into the catalog, Vida retains the helper contracts and
+turns their stable `required_secrets` IDs into guided sensitive setup actions. Do not duplicate those
+helper credentials as OpenClaw runtime env requirements merely to make setup discoverable.
 
 The current helper and recording root is `helper-workspace`. Older Computers can still use the
 legacy `browser-harness-workspace` name; do not move or copy evidence manually. Recorder and

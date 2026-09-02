@@ -112,6 +112,13 @@ describe every input and result field callers depend on. Import `computer_functi
 `managed_secret` from `vida_helper_runtime`. Do not inline credentials, accept them as arguments, or
 return them.
 
+Use stable exact IDs in `required_secrets` and ensure the registered helper retains the owning
+`skillSlug`. When a Browser-independent helper-only workspace skill is promoted into Vida's catalog,
+those owned contracts become its deterministic verification contract and their secret IDs become
+sensitive guided setup actions automatically. Do not also model helper credentials as process env
+requirements. Verification checks registration and credential presence but deliberately does not
+execute the helper; keep safe representative execution as a separate acceptance step.
+
 ## Build and acceptance workflow
 
 1. Read the existing owning skill and helper path before writing. Use `POST /workspace/write` with

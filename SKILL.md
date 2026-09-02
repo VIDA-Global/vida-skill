@@ -179,6 +179,11 @@ Use this sequence for every material workflow:
 An accepted write, queued Task, started login, lifecycle job, repair, backup, restore, publish, or
 scheduled run is not completion evidence.
 
+For an installed catalog skill, require `verifiedReady:true` after completing `/verify` and every
+returned `requiredActions` item. The legacy `ready` field can reflect runtime eligibility before
+setup verification and is not sufficient completion evidence. For helper skills, follow that setup
+gate with one safe representative helper execution.
+
 ## Change boundaries
 
 - Read operations are the default starting point.
