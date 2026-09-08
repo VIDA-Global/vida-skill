@@ -67,6 +67,29 @@ Use `context` for Contact or situation facts and `taskContext` for instructions 
 Task `meta` is retained for filtering and reporting but is not automatically added to the Agent
 prompt.
 
+### Contact fields on communication Task creation
+
+For new `call`, `text`, and `email` Tasks, reserve `meta.contact` for optional `name` and `email`
+fields. For example, include `"meta":{"contact":{"name":"Example Person","email":"lead@example.com"}}`
+in a Task create body. Other `meta` keys remain arbitrary reporting metadata.
+
+These fields populate the target Contact in the Task organization at creation. Strings are trimmed;
+null or blank values are ignored, and existing nonblank Contact fields are preserved. A new Contact
+uses the supplied name instead of a global-profile default. An email delivery target remains the
+Contact's canonical email. Neither Task `target`, caller ID (`cnam`), nor the global user profile
+is changed. Only `name` and `email` are supported inside `meta.contact`.
+
+CSV uploads use `meta.contact.name` and `meta.contact.email` columns with that exact casing:
+
+```csv
+type,accountId,target,taskContext,meta.contact.name,meta.contact.email
+call,1234,+15551234567,Confirm interest in a demo,Example Person,lead@example.com
+```
+
+Names in `context` or `taskContext` do not populate structured Contact fields. Task updates do not
+apply Contact changes; use the Contact API to replace existing values. After an import, read the
+Contact as well as the Task to verify the populated fields; acceptance alone is not proof.
+
 Whenever a Task has an associated Vida room, its response includes `chatRef` with the room ID,
 selected Agent account, and a ready-to-use Messages API URL. The field can be absent before a room
 has been created. Use `chatRef` for the complete linked chat; use `conversationRef` for one specific
