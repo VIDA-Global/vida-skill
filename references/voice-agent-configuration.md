@@ -31,6 +31,11 @@ Arrays such as `actions`, `apps`, `skills`, and `reportingFields` are complete a
 ## Intelligence
 
 - `agentModel` is the primary model for voice, messaging, and Computer Agent work.
+- With `agentS2SEngine:"openai-live"`, `agentModel` selects the OpenAI delegation model used for
+  reasoning and tool decisions while GPT Live handles the real-time audio conversation.
+- `agentFastMode` requests OpenAI Fast processing only when the selected model reports
+  `supportsFastMode:true`. It is disabled by default, and billing follows the service tier OpenAI
+  actually returns. Confirm the target account's product plan before enabling it.
 - `agentThinking` configures supported reasoning on the primary model.
 - `agentThinkingModel` selects the model used by Pause & Think and optional post-conversation reasoning.
 - `postConvoForceThinking` uses that thinking model for post-conversation work when appropriate.
@@ -42,7 +47,9 @@ Always select exact model IDs from the account-aware supported-model response. D
 Select the exact `agentVoice` from `/agent/voices`. Check `accountAvailability.available`, `languages`, `compatibleS2SEngines`, and `supportsStandardTts` before saving it.
 
 - `agentS2SEngine: null` uses separate speech recognition and synthesis. Configure `agentSttEngine` and select the exact `agentVoice`; Vida selects the matching text-to-speech provider from that voice.
-- `agentS2SEngine: "openai"` or `"gemini"` enables the corresponding speech-to-speech mode. Use only a compatible voice and language returned by discovery.
+- `agentS2SEngine:"openai-live"` uses OpenAI GPT Live, `"gemini"` uses Google Gemini Live, and
+  `"openai"` uses the older OpenAI Realtime integration. Use only a compatible voice and language
+  returned by discovery.
 - `agentLang` is the Vida language mode. Follow the OpenAPI enum and the selected voice's advertised languages.
 
 Do not migrate the frontend's hard-coded catalog or invent voice IDs. The API catalog is the integration source of truth.

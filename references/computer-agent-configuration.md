@@ -31,7 +31,7 @@ These are not versioned Agent settings and use purpose-built APIs:
 | Canvas source, publishing, and access | `/canvas` plus `/workspace` |
 | Browser access, recording, and reusable helpers | `/browser`, `/workflow-recordings`, `/helpers` |
 | Memory | `/memory` |
-| Immediate or scheduled work | standard `/api/v2/tasks` |
+| Immediate or scheduled work | standard `/api/v2/tasks`; synchronous immediate execution under `/tasks/execute` |
 | Sessions and replicated chats | `/session`, `/api/v2/computer/sessions`, `/api/v2/messages` |
 | Diagnostics and bounded repair | `/runtime/diagnostics`, `/runtime/repair` |
 
@@ -290,8 +290,11 @@ tool activity.
 Read `/tools/catalog` before changing `/tools/policy` or using `/tools/invoke`. Prefer a purpose-built
 route and invoke only a returned, allowed tool with narrowly scoped arguments.
 
-Immediate Computer work and repeating/one-off schedules use the standard Task API. Load
-`tasks-contacts-and-communications.md` for creation, cancellation, run history, and deletion rules.
+Immediate Computer work and repeating/one-off schedules use the Task API. For one immediate result,
+the Computer-specific `/tasks/execute` and `/tasks/{taskId}/result` operations can return the latest
+replicated assistant reply without manually reading the linked chat. Load
+`tasks-contacts-and-communications.md` for creation, result polling, cancellation, run history, and
+deletion rules.
 
 ## Heartbeats
 

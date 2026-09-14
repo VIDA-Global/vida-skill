@@ -69,26 +69,31 @@ prompt.
 
 ### Contact fields on communication Task creation
 
-For new `call`, `text`, and `email` Tasks, reserve `meta.contact` for optional `name` and `email`
-fields. For example, include `"meta":{"contact":{"name":"Example Person","email":"lead@example.com"}}`
-in a Task create body. Other `meta` keys remain arbitrary reporting metadata.
+For new `call`, `text`, and `email` Tasks, reserve `meta.contact` for optional structured Contact
+data. Read the current `TaskContactFields` OpenAPI schema for the complete allowed set. It includes
+standard identity and profile data such as name, email, phone, address, company, social profiles,
+tags, notes, agent context, and custom fields, but does not accept Contact identity or ownership
+selectors such as `id` or `target`. Other Task `meta` keys remain arbitrary reporting metadata.
 
-These fields populate the target Contact in the Task organization at creation. Strings are trimmed;
-null or blank values are ignored, and existing nonblank Contact fields are preserved. A new Contact
-uses the supplied name instead of a global-profile default. An email delivery target remains the
-Contact's canonical email. Neither Task `target`, caller ID (`cnam`), nor the global user profile
-is changed. Only `name` and `email` are supported inside `meta.contact`.
+These fields populate only missing values on the target Contact in the Task organization at
+creation. Strings are trimmed; null values, blank strings, and empty objects or arrays are ignored.
+Existing nonblank values, `false`, zero, and nonempty arrays are preserved; nested objects fill only
+missing leaves. A new Contact uses the supplied name instead of a global-profile default. Existing
+target phone/email defaults remain canonical. Neither Task `target`, outbound caller ID, nor the
+global user profile is changed.
 
-CSV uploads use `meta.contact.name` and `meta.contact.email` columns with that exact casing:
+CSV uploads use dotted `meta.contact` columns with their exact casing:
 
 ```csv
-type,accountId,target,taskContext,meta.contact.name,meta.contact.email
-call,1234,+15551234567,Confirm interest in a demo,Example Person,lead@example.com
+type,accountId,target,taskContext,meta.contact.name,meta.contact.email,meta.contact.address.state,meta.contact.customFields.vendorLeadCode
+call,1234,+15551234567,Confirm interest in a demo,Example Person,lead@example.com,LA,lead-123
 ```
 
-Names in `context` or `taskContext` do not populate structured Contact fields. Task updates do not
-apply Contact changes; use the Contact API to replace existing values. After an import, read the
-Contact as well as the Task to verify the populated fields; acceptance alone is not proof.
+CSV metadata cells are strings; use JSON Task creation for boolean, numeric, or array Contact
+values. Names in `context` or `taskContext` do not populate structured Contact fields. Task updates
+do not apply Contact changes; use the Contact API to replace or clear existing values. After an
+import, read the Contact as well as the Task to verify the populated fields; acceptance alone is not
+proof.
 
 Whenever a Task has an associated Vida room, its response includes `chatRef` with the room ID,
 selected Agent account, and a ready-to-use Messages API URL. The field can be absent before a room
@@ -135,6 +140,15 @@ Vida creates a dedicated linked chat. Poll the Task to `finished`, `errored`, or
 its `chatRef` with the Messages API to inspect the complete work, tool activity, and result. Cancel
 with a scoped Task update to `state:"canceled"`. Delete only with explicit intent;
 deletion stops active work before removing the Task record.
+
+For one immediate assignment where the caller needs the final assistant text directly, use
+`POST /api/v2/computer/accounts/{targetAccountId}/tasks/execute`. Send `taskContext` and only the
+optional fields declared by `ComputerTaskExecute`; do not send `type` or `accountId`. A `200`
+response means output is ready or the Task ended unavailable. A `202` means execution or reply
+replication is still pending. Save `taskId` and poll the returned `resultRef.href`, which resolves to
+`GET /api/v2/computer/accounts/{targetAccountId}/tasks/{taskId}/result`. Inspect `state`,
+`resultStatus`, `output`, and `error`. The POST is not idempotent, so reconcile existing Tasks before
+retrying an uncertain request.
 
 ## Repeating and one-off Tasks
 
