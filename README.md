@@ -1,7 +1,12 @@
 # Vida API skill
 
-This repository is the source of truth for Vida's `vida-api` agent skill. Give your
-coding assistant this repository URL and ask it to install the skill and guide you
+This repository is the source of truth for Vida's `vida-api` agent skill. The skill 
+teaches agents how to use Vida's API for account onboarding, Agent configuration,
+contacts, Tasks, integrations, optional reseller administration, Computer Agent setup and
+operations, safe Computer Agent cloning, logs, and conversations. 
+Review [SKILL.md](./SKILL.md) here.
+
+Give your coding assistant this repository URL and ask it to install the skill and guide you
 through API access:
 
 > Install the Vida API skill from https://github.com/VIDA-Global/vida-skill for my
@@ -80,12 +85,6 @@ without exposing the key. Rotate a key that has been exposed.
 
 See [Vida's authentication guide](https://vida.io/docs/api-reference/authentication)
 for account scopes and eligibility. API key creation may require an eligible plan.
-
-## About the skill
-
-The skill teaches agents how to use Vida's API for account onboarding, Agent configuration,
-contacts, Tasks, integrations, optional reseller administration, Computer Agent setup and
-operations, safe Computer Agent cloning, logs, and conversations. Review [SKILL.md](./SKILL.md) here.
 
 ## API reference
 
