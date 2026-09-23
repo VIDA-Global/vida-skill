@@ -22,7 +22,14 @@ permission, or response shape from memory when the operation is documented.
 
 ## Obtain API access
 
-Check for `VIDA_API_KEY` first.
+Check whether `VIDA_API_KEY` is available in the current runtime without printing
+its value. If the user is setting up this skill for the first time, use the
+[repository setup guide](https://github.com/VIDA-Global/vida-skill#readme) to
+help install the complete skill directory before continuing. A key exported in a
+different terminal or stored on the user's machine is not necessarily available
+to a desktop or remote agent. Guide the user to the host's private secret mechanism
+or a local CLI session launched from the same terminal. Never ask the user to
+disclose the key in chat or echo it in a command result.
 
 If a key is present, do not recommend creating an Agent, upgrading an account, or obtaining a
 different key until you inspect the authenticated identity with `GET /api/v2/account` without a
@@ -67,9 +74,12 @@ scope that can complete the work:
 
 Have the user select **New Key**, give it a recognizable purpose, and store the returned value in a
 secure environment or secret manager as `VIDA_API_KEY`. Never ask the user to paste the key into
-chat, a workspace file, a Task, or a work log. If the API Keys item or key creation is unavailable,
-the selected account may lack the required access or paid plan; direct the user to the account's
-upgrade flow or Vida support instead of choosing a broader account silently. See
+chat, a workspace file, a Task, or a work log. Do not reveal it through environment inspection,
+shell tracing, full request URLs, or tool output. Since Vida uses a `token` query parameter,
+avoid logging the constructed URL and redact it from errors and reports. If the API Keys item or
+key creation is unavailable, the selected account may lack the required access or paid plan;
+direct the user to the account's upgrade flow or Vida support instead of choosing a broader
+account silently. See
 `https://vida.io/docs/api-reference/authentication`.
 
 The first key cannot be created through `/api/v2/tokens` because that operation already requires
@@ -134,9 +144,13 @@ control account scope, safety, request construction, and verification.
 
 Vida API authentication uses the `token` query parameter:
 
-```bash
-curl -s "$VIDA_API_BASE_URL/api/v2/account?token=$VIDA_API_KEY"
+```text
+GET /api/v2/account?token=<URL-encoded VIDA_API_KEY>
 ```
+
+Use a request method that reads the key from the runtime secret or environment and keeps the
+expanded URL out of command arguments, shell traces, logs, and error messages. The example shows
+the API shape, not a URL to print or paste. Do not use verbose HTTP tracing with this token.
 
 Resolve identity before making a scoped request:
 
@@ -201,13 +215,13 @@ gate with one safe representative helper execution.
 ## Request construction
 
 Use URL encoding for token and query values, JSON for documented JSON bodies, and multipart only
-where OpenAPI declares it. Typical scoped JSON request:
+where OpenAPI declares it. Typical scoped JSON request shape:
 
-```bash
-curl -s -X POST \
-  "$VIDA_API_BASE_URL/api/v2/tasks?token=$VIDA_API_KEY&targetAccountId=$TARGET_ACCOUNT_ID" \
-  -H "content-type: application/json" \
-  --data-binary @request.json
+```text
+POST /api/v2/tasks?token=<URL-encoded VIDA_API_KEY>&targetAccountId=<Agent account ID>
+Content-Type: application/json
+
+<JSON body matching the current OpenAPI operation>
 ```
 
 Before a mutation, check:
