@@ -37,6 +37,15 @@ skill does not appear after installation, start a new agent session.
 
 ## Get and supply a Vida API key
 
+If you are the assistant helping with setup, walk the user through this section in
+chat after installing the skill. Tell them where to create the key and give them
+the instructions that fit their environment. For a local Bash CLI, show the
+private-entry commands below and tell the user to run them in their own terminal.
+For a desktop or remote agent, explain how to use that host's private secret
+mechanism if one is available. Do not stop at a link to this README or ask the
+user to send you the key. Once the user has supplied it privately, check for it
+without displaying it and perform the read-only account check below.
+
 1. Sign in to [Vida](https://vida.io/app), open your default Agent, and go to
    **Settings → Developer → API Keys**. The direct page is
    `https://vida.io/app/agent/{accountId}/settings/developer`, where `accountId`
@@ -72,9 +81,13 @@ without exposing the key. Rotate a key that has been exposed.
 See [Vida's authentication guide](https://vida.io/docs/api-reference/authentication)
 for account scopes and eligibility. API key creation may require an eligible plan.
 
+## About the skill
+
 The skill teaches agents how to use Vida's API for account onboarding, Agent configuration,
 contacts, Tasks, integrations, optional reseller administration, Computer Agent setup and
 operations, safe Computer Agent cloning, logs, and conversations. Review [SKILL.md](./SKILL.md) here.
+
+## API reference
 
 The generated [OpenAPI reference](https://vida.io/docs/apiv2.json) defines exact endpoint schemas.
 Vida's [API guides](https://vida.io/docs/api-reference/overview) explain product concepts and

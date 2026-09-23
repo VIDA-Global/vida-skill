@@ -25,11 +25,16 @@ permission, or response shape from memory when the operation is documented.
 Check whether `VIDA_API_KEY` is available in the current runtime without printing
 its value. If the user is setting up this skill for the first time, use the
 [repository setup guide](https://github.com/VIDA-Global/vida-skill#readme) to
-help install the complete skill directory before continuing. A key exported in a
-different terminal or stored on the user's machine is not necessarily available
-to a desktop or remote agent. Guide the user to the host's private secret mechanism
-or a local CLI session launched from the same terminal. Never ask the user to
-disclose the key in chat or echo it in a command result.
+install the complete skill directory, then actively give the user the applicable
+key setup instructions from that guide in chat. If they use a local Bash CLI,
+show the private terminal input commands and explain that they must launch the
+agent from that same terminal. If they use a desktop or remote agent, guide them
+to that host's private secret mechanism, or offer the local CLI path if none is
+available. Ask which environment they use if it is unclear. A key exported in a
+different terminal or stored on the user's machine is not necessarily available to
+this runtime.
+Have the user enter the key privately; never ask them to disclose it in chat or
+echo it in a command result. Resume the account preflight after they have done so.
 
 If a key is present, do not recommend creating an Agent, upgrading an account, or obtaining a
 different key until you inspect the authenticated identity with `GET /api/v2/account` without a
