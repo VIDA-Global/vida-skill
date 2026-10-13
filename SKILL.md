@@ -203,6 +203,27 @@ returned `requiredActions` item. The legacy `ready` field can reflect runtime el
 setup verification and is not sufficient completion evidence. For helper skills, follow that setup
 gate with one safe representative helper execution.
 
+## Work through apparent blockers
+
+Before asking the user for an input or reporting that a Vida workflow is blocked, trace the desired
+output to its actual prerequisites. Check the authorized evidence already available for the target:
+scoped API reads, Agent workspace files, prior Task results and linked conversations, and supplied
+code or documents. For a script or helper, inspect its input names, defaults, calculations, and
+output contract; adapt differently named fields or run a safe representative test where useful.
+Do not treat an answer already present under another name as missing.
+
+Try relevant, authorized recovery paths before escalating: documented alternative reads, targeted
+status or diagnostic checks, credential assignment and verification without exposing secret values,
+safe refresh or reapply actions, and calculations from sourced inputs. Reconcile uncertain writes
+before retrying. Do not broaden account scope, invent inputs, or present an estimate as a measured
+value. Label assumptions and preserve the distinction between what a model estimates and what a
+bill, inventory, or verified site record proves.
+
+Continue any independent work that remains possible. If a prerequisite truly requires user action,
+ask only for the smallest missing input or authorization, and state what was checked, what can be
+completed now, and what specifically remains. Stop repeated attempts when the same verified blocker
+persists or another attempt would exceed the user's authorization or the change boundaries below.
+
 ## Change boundaries
 
 - Read operations are the default starting point.
