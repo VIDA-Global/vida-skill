@@ -16,7 +16,7 @@ Not every customer has every hierarchy level.
   Agent resources.
 
 Read `GET /api/v2/account` without a target parameter first. If it returns `superAdmin: true`, the
-key belongs to a Vida platform administrator and is not limited by the returned `accountType`;
+requester is a Vida platform administrator and is not limited by the returned `accountType`;
 resolve the exact target for each operation instead of creating an Agent or obtaining a narrower
 key. Keep that requester identity separate from accounts read later with `targetAccountId`.
 Otherwise, never invent a reseller or partner layer for an ordinary organization. Use reseller

@@ -46,10 +46,19 @@ different Agent's Computer. Registered helpers are exposed through the `computer
 
 ## Initial setup order
 
+A newly signed-up account does not have a deployed Computer. Deployment requires a confirmed
+subscription and the appropriate account entitlement. For an unsubscribed prospect, load
+`references/prospect-onboarding.md` and prepare the implementation plan, connection requirements
+and authoritative quote first. Do not start deployment, install skills, request private browser
+login or promise a tested Computer workflow before subscription. An assigned default plan or
+checkout link alone does not establish subscription. Continue the setup sequence below after
+subscription and deployment permission are verified; reuse an existing usable Computer when one
+actually exists.
+
 1. Resolve the exact child account and its `targetAccountId`.
 2. Create or update Agent staging with instructions, an available `agentModel`, heartbeat behavior, and assigned skill instructions.
 3. Read staging back. Publish only when approved and verify live.
-4. Read the Computer account status and provision only if no usable deployment exists.
+4. Verify subscription and deployment entitlement, then read Computer status and provision only if no usable deployment exists.
 5. Wait for lifecycle completion and verify Computer health.
 6. Install and verify required skills; complete their setup actions and authentication in dependency order.
 7. Configure channels and complete any user login flow; probe status.

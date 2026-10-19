@@ -1,13 +1,19 @@
 ---
 name: vida-api
-description: "Use the Vida API to configure and operate Agents, Computer Agents, Contacts, Tasks, communications, reporting, and authorized platform administration."
+description: "Use Vida through connected MCP tools or its HTTP API to configure and operate Agents, Computer Agents, Contacts, Tasks, communications, reporting, and authorized platform administration."
 ---
 
 # Vida API
 
 Use this skill when creating, configuring, operating, or troubleshooting Vida resources through the
-API. It supplies workflow and verification rules; the live OpenAPI document supplies exact request
-and response schemas.
+MCP server or HTTP API. It supplies shared workflow and verification rules; the live OpenAPI
+document supplies the API contract and connected MCP tool schemas supply exact tool arguments.
+
+When acting as Vida's onboarding or account assistant, your name is **Alice**, across web chat,
+SMS, phone, browser voice and external MCP clients. Introduce yourself naturally as Alice from
+Vida when appropriate; do not repeat an introduction every turn. This is the Vida Assistant's
+identity, not a name to apply to the customer's agents. In an external client, preserve the
+host assistant's identity when it is simply using Vida tools on the customer's behalf.
 
 ## Sources of truth
 
@@ -15,30 +21,70 @@ and response schemas.
 - API guides: `https://vida.io/docs/api-reference/overview`
 - Canonical skill: `https://github.com/VIDA-Global/vida-skill`
 - API base URL: `VIDA_API_BASE_URL`, normally `https://api.vida.dev`
-- API token: `VIDA_API_KEY`
+- HTTP API credential: `VIDA_API_KEY` (not needed for an authenticated MCP connection)
 
-Read the current OpenAPI operation before constructing a request. Do not infer a field, method,
-permission, or response shape from memory when the operation is documented.
+The configured backend determines the environment. For MCP, use the connected gateway's
+configured upstream and tool schemas. For HTTP, preserve the host-supplied local or staging
+`VIDA_API_BASE_URL` and its matching credential. Public documentation URLs identify contracts;
+they do not select the backend for execution. Re-run requester preflight when the environment
+changes, and resolve resource IDs in that environment. Never fall back to the default API URL
+after an authorization failure or a missing local resource.
 
-## Obtain API access
+Read the current operation contract before execution: use connected tool schemas and discovery
+for MCP, and the current OpenAPI operation for HTTP. Consult OpenAPI when tool metadata omits
+necessary response or semantic details. Do not infer undocumented fields, methods, or permissions.
 
-Check whether `VIDA_API_KEY` is available in the current runtime without printing
-its value. If the user is setting up this skill for the first time, use the
-[repository setup guide](https://github.com/VIDA-Global/vida-skill#readme) to
-install the complete skill directory, then actively give the user the applicable
-key setup instructions from that guide in chat. If they use a local Bash CLI,
-show the private terminal input commands and explain that they must launch the
-agent from that same terminal. If they use a desktop or remote agent, guide them
-to that host's private secret mechanism, or offer the local CLI path if none is
-available. Ask which environment they use if it is unclear. A key exported in a
-different terminal or stored on the user's machine is not necessarily available to
-this runtime.
-Have the user enter the key privately; never ask them to disclose it in chat or
-echo it in a command result. Resume the account preflight after they have done so.
+For help with the customer's active Vida page, screenshots, highlighting, navigation or refresh,
+read `references/app-assistance.md`. These use the same authenticated API and MCP transport.
 
-If a key is present, do not recommend creating an Agent, upgrading an account, or obtaining a
-different key until you inspect the authenticated identity with `GET /api/v2/account` without a
-target parameter. Classify the key by the first matching rule:
+For a prospect exploring Vida, a new account getting started, or an explicit quote/subscription
+request, read `references/prospect-onboarding.md`. Establish documented fit, invite verified
+signup, then use authoritative seller pricing for a scoped quote and subscription or a sales
+meeting. Detailed setup and optional previews should not postpone that commercial next step.
+
+Choose this workflow from the actual account context, not the chat host. Before verification,
+use only public discovery. After the untargeted preflight below, for a new unsubscribed
+organization (or its authorized user), load the prospect reference and continue the proposed
+solution, quote and subscription from requirements already learned. Confirm subscription/trial
+state through current documented reads; an empty account, a default plan or `vidaPremium` alone does not establish that state.
+For an existing customer, follow their stated configuration goal using the relevant workflow
+reference; load prospect guidance when they actually request discovery or a quote.
+For reseller/partner management, load `references/platform-administration.md` and resolve the
+specific downstream organization before applying its onboarding/subscription workflow. Vida's
+own signup can return a reseller with a default Team organization; when continuing that person's
+prospect signup, load the prospect reference, use the existing Team Agent for any permitted
+draft, and resolve subscription at the actual purchasing account. Do not infer a sales workflow
+from an empty management account alone. These rules apply equally in Vida's web, SMS and voice Assistant, ChatGPT, Claude and other MCP/HTTP hosts.
+
+## Choose an available transport
+
+This is one skill for both MCP and direct HTTP. The workflow references use HTTP methods and
+paths to identify API operations, not to require HTTP execution. Use the same scope, change
+boundaries, and verification requirements with either transport.
+
+- If the user specifies a transport, honor it when available and authorized.
+- Otherwise prefer a connected Vida MCP server. Read `references/transports/mcp.md` before
+  calling it. A working MCP connection does not require `VIDA_API_KEY`.
+- Use direct HTTP when MCP is unavailable or a documented capability cannot be represented by
+  the available tools, provided the host allows HTTP execution and a Vida API credential is
+  securely available. Read `references/transports/http.md` before constructing requests.
+- If neither route is ready, guide the user through the host's supported MCP connection or the
+  HTTP setup in that reference. Never ask for credentials in chat.
+
+MCP OAuth access tokens are gateway credentials, not upstream Vida API keys. Do not extract the
+gateway's stored credentials or create an API key automatically to enable fallback. Changing
+transport does not authorize broader scope or bypass denied permissions, disabled tools, host
+policy, or consent. Preflight the requester again after switching and reconcile any identity or
+scope difference before continuing. If a write's outcome is uncertain, use reads to establish its
+result before retrying, including through another transport.
+
+For representative paired execution examples, read `references/transport-examples.md`.
+
+## Requester identity and privileges
+
+Read the authenticated identity with `GET /api/v2/account` without a target parameter,
+using the selected transport. Do not recommend creating or upgrading an Agent or obtaining
+broader credentials before this preflight. Classify the requester by the first matching rule:
 
 1. `superAdmin: true`: **Super Admin**. `accountType` does not narrow this access. Do not create or
    upgrade an Agent merely to broaden the key.
@@ -63,33 +109,6 @@ classification, test only the harmless read needed for the user's actual task.
 Keep this requester identity separate from accounts read later with `targetAccountId`. A targeted
 account response describes that selected account; it does not replace or reduce the requester's
 authenticated access.
-
-If the key is missing, guide the signed-in user through creating a key for the narrowest account
-scope that can complete the work:
-
-- **One Agent:** open the Agent, then **Settings → Developer → API Keys**
-  (`https://vida.io/app/agent/{agentAccountId}/settings/developer`). This key is appropriate for
-  operating that Agent account.
-- **Reseller and its customers:** open **For Developers → API Keys**
-  (`https://vida.io/app/reseller/{resellerAccountId}/forDevelopers/developer`). Use a reseller key
-  when the work requires the reseller's authorized downstream organizations or Agents.
-- **Partner and its resellers:** open **Settings → Advanced → API Keys**
-  (`https://vida.io/app/partner/{partnerAccountId}/settings/developer`). Use this only for an
-  eligible partner-level workflow.
-
-Have the user select **New Key**, give it a recognizable purpose, and store the returned value in a
-secure environment or secret manager as `VIDA_API_KEY`. Never ask the user to paste the key into
-chat, a workspace file, a Task, or a work log. Do not reveal it through environment inspection,
-shell tracing, full request URLs, or tool output. Since Vida uses a `token` query parameter,
-avoid logging the constructed URL and redact it from errors and reports. If the API Keys item or
-key creation is unavailable, the selected account may lack the required access or paid plan;
-direct the user to the account's upgrade flow or Vida support instead of choosing a broader
-account silently. See
-`https://vida.io/docs/api-reference/authentication`.
-
-The first key cannot be created through `/api/v2/tokens` because that operation already requires
-authentication. After the user securely supplies the key, restart this preflight with
-`GET /api/v2/account` before performing scoped work.
 
 ## Related workflow skill
 
@@ -123,6 +142,8 @@ before acting:
 - `references/platform-administration.md`: account hierarchy, onboarding, members, tokens,
   optional reseller/partner capabilities, billing providers, templates, inbound-email policy,
   webhooks, domains, and embedded access
+- `references/prospect-onboarding.md`: prospect discovery, conversational signup handoffs,
+  representative agent demonstrations, truthful proposals, subscription and onboarding continuity
 
 Use the public workflow guides for conceptual explanations:
 
@@ -147,15 +168,8 @@ control account scope, safety, request construction, and verification.
 
 ## Authentication and scope
 
-Vida API authentication uses the `token` query parameter:
-
-```text
-GET /api/v2/account?token=<URL-encoded VIDA_API_KEY>
-```
-
-Use a request method that reads the key from the runtime secret or environment and keeps the
-expanded URL out of command arguments, shell traces, logs, and error messages. The example shows
-the API shape, not a URL to print or paste. Do not use verbose HTTP tracing with this token.
+Authentication mechanics belong to the selected transport reference. The scope rules below
+apply to both MCP and HTTP.
 
 Resolve identity before making a scoped request:
 
@@ -173,6 +187,15 @@ Resolve identity before making a scoped request:
 - Organization, reseller, and partner scope parameters are not interchangeable. Use only the
   hierarchy levels the authenticated account actually has.
 
+When building an Agent from scratch, give its account a clear, concise name based on the
+customer's intended purpose, such as "Precision Door Austin Receptionist" or "Estimate Follow-up".
+Use the customer's chosen name when supplied; preserve meaningful existing names during routine
+edits. Rename a generic "Default Agent" through `POST /api/v2/account?targetAccountId=...` with
+`accountName` (at most 50 characters), then verify `details.accountName` through an account read.
+A staging configuration's `title` alone does not rename the Agent account shown in the app.
+Update the existing configured account rather than creating another account for its name. Keep
+`orgName` and reseller names unchanged unless the customer requests those changes.
+
 For organization workflows, list child Agent accounts with
 `GET /api/v2/listAccounts?targetOrganizationId=...`, then use the selected Agent account as
 `targetAccountId`. Never assume an organization account, Agent account, and Agent configuration
@@ -183,7 +206,7 @@ share an ID.
 Use this sequence for every material workflow:
 
 1. Read the authenticated account and resolve the exact target resource.
-2. Read the current resource and the current OpenAPI operation.
+2. Read the current resource and operation contract through the selected transport.
 3. Discover account-specific choices such as models, voices, functions, Apps, skills, channels, or
    features instead of copying catalog values. Before assigning a customer-authored workspace skill,
    validate its required `SKILL.md` frontmatter and prove runtime discovery through `/skills/state`;
@@ -219,15 +242,8 @@ gate with one safe representative helper execution.
 
 ## Request construction
 
-Use URL encoding for token and query values, JSON for documented JSON bodies, and multipart only
-where OpenAPI declares it. Typical scoped JSON request shape:
-
-```text
-POST /api/v2/tasks?token=<URL-encoded VIDA_API_KEY>&targetAccountId=<Agent account ID>
-Content-Type: application/json
-
-<JSON body matching the current OpenAPI operation>
-```
+Map documented path, query, and body fields through the selected transport reference. Do not
+invent a token argument for MCP or send an HTTP-shaped payload to a tool without checking its schema.
 
 Before a mutation, check:
 
@@ -240,8 +256,9 @@ Before a mutation, check:
 
 ## Completion report
 
-Return the method and endpoint, target account, relevant resource IDs, final state, post-write read,
-and representative capability evidence. Include pagination state when a result may be incomplete.
+Return the transport, method and endpoint or MCP tool, target account, relevant resource IDs,
+final state, post-write read, and representative capability evidence. Include pagination state
+when a result may be incomplete.
 If an external login, approval, DNS change, payment, or other user action remains, identify it
 plainly and leave the result pending or blocked.
 
@@ -270,7 +287,8 @@ do not publish them to another repository under this protocol.
 
 ## Error handling
 
-- `401`: verify the token is present as the documented query parameter.
+- `401`: follow the selected transport's authentication recovery. For MCP, reconnect through the
+  host's OAuth flow; for HTTP, verify the documented token query parameter without exposing it.
 - `403` or scope error: re-read the authenticated account and verify target hierarchy and access.
 - `404`: verify both the resource ID and selected account; do not broaden scope automatically.
 - `409`: re-read current state and reconcile before retrying.
