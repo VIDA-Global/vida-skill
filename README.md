@@ -1,18 +1,34 @@
 # Vida API skill
 
-This repository is the source of truth for Vida's `vida-api` agent skill. The skill 
+This repository is the source of truth for Vida's `vida-api` agent skill. The skill
 teaches agents how to use Vida's API for account onboarding, Agent configuration,
 contacts, Tasks, integrations, optional reseller administration, Computer Agent setup and
-operations, safe Computer Agent cloning, logs, and conversations. 
-Review [SKILL.md](./SKILL.md) here.
+operations, safe Computer Agent cloning, logs, and conversations. The same skill supports
+connected Vida MCP tools and direct HTTP API access, with shared workflow, account-scope, and
+verification rules. Review [SKILL.md](./SKILL.md) here.
 
-Give your coding assistant this repository URL and ask it to install the skill and guide you
-through API access:
+Give your assistant this repository URL and ask it to install the skill:
 
 > Install the Vida API skill from https://github.com/VIDA-Global/vida-skill for my
 > agent environment. Read its README and SKILL.md, keep the `references/` directory
-> with it, then help me set up `VIDA_API_KEY` privately and verify access with a
-> read-only account request. Do not ask me to paste the key into chat.
+> with it, then use my connected Vida MCP server if available. Otherwise help me set up
+> HTTP API access privately. Verify the authenticated account with a read-only untargeted
+> account request. Do not ask me to paste credentials into chat.
+
+## Choose access
+
+Use your host's supported Vida MCP connection and OAuth login when available. A working MCP
+connection does not need `VIDA_API_KEY`. Installing this skill does not itself connect an MCP
+server, and a bare MCP connection does not necessarily install this skill.
+
+For direct HTTP, use the private API key setup below. HTTP fallback requires a securely available
+Vida API credential and host support for HTTP execution; an MCP gateway OAuth token is not that
+credential. Follow `SKILL.md` before switching transports.
+
+Transport details live in `references/transports/`, paired examples in
+`references/transport-examples.md`, and domain workflows in the existing reference files.
+Distributors can bundle a pinned copy of this same complete skill directory with an MCP release
+without maintaining a separate MCP playbook.
 
 ## Install the skill
 
