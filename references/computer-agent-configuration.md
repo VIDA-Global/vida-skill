@@ -124,6 +124,52 @@ runtime env/config, install steps, or manual setup retain the general verificati
 The Agent configuration's `skills[]` supplies Agent-specific usage instructions; it does not install
 or authenticate the package. Restricted Computer runtime credentials cannot manage secrets.
 
+### Custom IDs and Browser credentials
+
+A custom target ID is an exact managed-secret key, such as `example_portal_user` or
+`example_portal_password`. It does not automatically become an environment variable or an OpenClaw
+configuration field. Read `/secrets` metadata for the selected Agent, then compare those IDs with the
+helper's `requiredSecrets` from `/helpers`. Preserve spelling, case, punctuation, and the selected
+Agent account. An organization-level value can be an inherited fallback; another Agent's value is
+not a substitute.
+
+In `/secrets/check`, `hasStoredValue` describes storage while `deployment.supported` describes an
+automatic OpenClaw configuration mapping. A custom helper credential can have
+`hasStoredValue:true` and deployment `unsupported` with reason `unsupported_secret_target` and still
+work through helpers. Prove delivery by executing the helper rather than repeatedly reapplying an
+unsupported configuration target.
+
+Do not diagnose missing credentials, ask the user to re-enter them, or change secret storage based
+only on a UI deployment label or local CLI error. Compare the selected Agent's stored metadata and
+the helper's declared IDs, then test the actual local Browser execution path.
+Use that execution evidence to identify a missing value, an invocation failure, or a portal login
+challenge. Email verification or MFA after form submission is a separate authentication step.
+
+For an authorized Browser login, use this sequence:
+
+1. On the Computer, prefer an existing login helper with the exact username and password IDs in
+   `requiredSecrets`. Run `vida-browser-helper <helperName> '<jsonArgs>'` with business inputs only.
+2. For ad hoc `browser-harness` Python, use `from vida_helper_runtime import managed_secret` and
+   pass values directly to Browser interactions. Reusable helpers declare both IDs in literal
+   `required_secrets` metadata. Configure values through `/secrets`.
+3. Prove credential delivery with a safe helper result containing only availability booleans, then
+   test the real Browser operation and verify authenticated page state. Credential presence alone
+   does not prove a login succeeded. Preserve a valid existing session.
+4. Inspect the Agent's actual tool path in its linked conversation. Test the local helper command
+   or direct `browser-harness` Python path that the Agent will actually use.
+
+Containers with managed-secret runtime support resolve only the registered helper's declared IDs
+automatically for `vida-browser-helper <helperName> '<jsonArgs>'`. Their direct `browser-harness`
+Python can import `managed_secret` to retrieve an exact ID in memory for ad hoc Browser work.
+If the saved values and declared IDs match but local delivery fails, investigate the container
+runtime. A missing runtime module indicates an incomplete or outdated installation. Verify the
+updated container before claiming the local path works. During rollout, deploy
+backend support for selected-Agent runtime secret resolution before upgrading the container. A
+`helper_secret_resolution_failed` result requires checking that backend/runtime compatibility and
+the selected Agent context. Never work around this by printing resolver output, dumping environment
+variables, writing credential files, or putting
+values in Task context, helper arguments, or results.
+
 ## Channels
 
 Read `/channels/catalog` and `/channels/status` before changing a connection. Configure only fields
