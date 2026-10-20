@@ -141,29 +141,29 @@ unsupported configuration target.
 
 Do not diagnose missing credentials, ask the user to re-enter them, or change secret storage based
 only on a UI deployment label or local CLI error. Compare the selected Agent's stored metadata and
-the helper's declared IDs, then test `/helpers/execute` or the supported Agent `computer` action.
+the helper's declared IDs, then test the actual local Browser execution path.
 Use that execution evidence to identify a missing value, an invocation failure, or a portal login
 challenge. Email verification or MFA after form submission is a separate authentication step.
 
 For an authorized Browser login, use this sequence:
 
-1. List `/helpers` and prefer an existing login helper with the exact username and password IDs in
-   `requiredSecrets`. Supply only its registered business arguments through `/helpers/execute`.
-2. When authoring a helper, declare both IDs in literal `required_secrets` metadata and read each
-   value with `from vida_helper_runtime import managed_secret`. Configure them through `/secrets`.
+1. On the Computer, prefer an existing login helper with the exact username and password IDs in
+   `requiredSecrets`. Run `vida-browser-helper <helperName> '<jsonArgs>'` with business inputs only.
+2. For ad hoc `browser-harness` Python, use `from vida_helper_runtime import managed_secret` and
+   pass values directly to Browser interactions. Reusable helpers declare both IDs in literal
+   `required_secrets` metadata. Configure values through `/secrets`.
 3. Prove credential delivery with a safe helper result containing only availability booleans, then
    test the real Browser operation and verify authenticated page state. Credential presence alone
    does not prove a login succeeded. Preserve a valid existing session.
-4. Inspect the Agent's actual tool path in its linked conversation. The backend helper API, the
-   container's `vida-browser-helper` command, and direct `browser-harness` Python are separate
-   execution paths; test the path the Agent will actually use.
+4. Inspect the Agent's actual tool path in its linked conversation. Test the local helper command
+   or direct `browser-harness` Python path that the Agent will actually use.
 
 Containers with managed-secret runtime support resolve only the registered helper's declared IDs
 automatically for `vida-browser-helper <helperName> '<jsonArgs>'`. Their direct `browser-harness`
-Python can import `managed_secret` to retrieve an exact ID in memory for ad hoc Browser work. A
-missing runtime module or `missing_helper_secrets` despite successful backend helper execution
-indicates a container runtime/version issue. Use the working `/helpers/execute` route and verify
-the updated container before claiming the CLI or direct-Python path works. During rollout, deploy
+Python can import `managed_secret` to retrieve an exact ID in memory for ad hoc Browser work.
+If the saved values and declared IDs match but local delivery fails, investigate the container
+runtime. A missing runtime module indicates an incomplete or outdated installation. Verify the
+updated container before claiming the local path works. During rollout, deploy
 backend support for selected-Agent runtime secret resolution before upgrading the container. A
 `helper_secret_resolution_failed` result requires checking that backend/runtime compatibility and
 the selected Agent context. Never work around this by printing resolver output, dumping environment

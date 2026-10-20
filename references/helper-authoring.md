@@ -128,23 +128,23 @@ the exact username and password IDs, for example
 helper, pass it directly to the Browser interaction, and return only nonsecret status. Reuse an
 authenticated session when available and verify the expected authenticated page after a login.
 
-`POST /helpers/execute` resolves declared credentials for the selected Agent and delivers them to
-the helper. Containers with managed-secret runtime support do the same for
-`vida-browser-helper <helperName> '<jsonArgs>'`. Direct `browser-harness` Python on those containers
-can import `managed_secret` to retrieve requested IDs in memory for ad hoc Browser work. Registered
+On a Computer with managed-secret runtime support, `vida-browser-helper <helperName> '<jsonArgs>'`
+resolves declared credentials for the selected Agent and delivers them to the helper. Direct
+`browser-harness` Python can import `managed_secret` to retrieve requested IDs in memory for ad hoc
+Browser work. Registered
 helpers must still declare every required ID so registration, setup, and execution agree. A
 credential value never belongs in command arguments, JSON inputs, source, logs, files, or results.
 
 Test the execution path the Agent uses. First exercise a safe readiness helper returning only
 availability booleans, then an authorized representative Browser operation with a verified page
-result. If `/helpers/execute` works but the CLI returns `missing_helper_secrets` or direct Python
-cannot import `vida_helper_runtime`, report the container/runtime version issue and use the working
-backend route until the updated container is verified. Do not print the secret resolver's plaintext
+result. If the saved values and declared IDs match but the CLI returns `missing_helper_secrets`,
+investigate the local runtime delivery. If direct Python cannot import `vida_helper_runtime`,
+report the incomplete or outdated runtime installation. Do not print the secret resolver's plaintext
 output as a workaround. A custom ID's `unsupported_secret_target` deployment check means it has no
 automatic OpenClaw configuration mapping; it does not mean helpers cannot use the stored value.
 Do not request replacement credentials or change storage on the strength of that label or a local
-CLI error. Check the selected Agent's secret metadata and declared IDs, then verify through
-`/helpers/execute` or the supported Agent `computer` action before diagnosing a missing credential.
+CLI error. Check the selected Agent's secret metadata and declared IDs, then verify the actual
+local execution path before diagnosing a missing credential.
 
 ## Build and acceptance workflow
 
