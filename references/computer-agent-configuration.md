@@ -300,6 +300,27 @@ Harness is the recommended client: fetch `/json/version` with the required heade
 returned ticket-bearing `webSocketDebuggerUrl` as `BU_CDP_WS`. Do not give Browser Harness the
 protected discovery URL as `BU_CDP_URL` when it cannot send the required discovery header.
 
+### Reuse Browser tabs during Computer Tasks
+
+Treat the Computer Agent's Browser profile as persistent across `browser-harness` commands and
+Computer Tasks. Use the fewest tabs needed for the workflow:
+
+1. Inspect the current tab and existing tabs before opening one. Reuse a relevant authenticated tab
+   for the target site. Navigate that tab with `goto_url(...)` when a different page is needed;
+   inspect or interact with the current page without navigating when it is already correct.
+2. Use `new_tab(...)` only for the first navigation when no usable tab exists, or when the workflow
+   requires a second page at the same time. The Browser Use skill's “first navigation” instruction
+   applies to the Browser session, not to every new heredoc or tool call. Do not open another copy of
+   a form just to inspect its DOM, locate a control, or retry a failed interaction.
+3. Before retrying after a timeout or failed form step, inspect the existing tab and any unsaved
+   state. Reuse it when safe. Close duplicate or blank tabs that the workflow created, while keeping
+   at least one usable tab open. Do not close a user's unrelated tabs.
+
+Include this tab plan in customer-authored Browser skills and Computer Task instructions. For a
+single-site form workflow, verify that the Agent continued in the same tab through inspection,
+entry, save, and confirmation unless a second tab was necessary. When diagnosing tab growth through
+CDP, count targets with `type:"page"`; embedded `iframe` targets are not separate tabs.
+
 Before recording, confirm no recording or generation is active. Start with the automation session's
 exact slot, perform one representative workflow, stop, retain `domainKey`, `recordingId`, and the
 returned `evidenceRoot`, then require `finalized:true` and `analysisStatus:"completed"` before
