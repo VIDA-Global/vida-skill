@@ -47,15 +47,18 @@ different Agent's Computer. Registered helpers are exposed through the `computer
 ## Initial setup order
 
 1. Resolve the exact child account and its `targetAccountId`.
-2. Create or update Agent staging with instructions, an available `agentModel`, heartbeat behavior, and assigned skill instructions.
-3. Read staging back. Publish only when approved and verify live.
-4. Read the Computer account status and provision only if no usable deployment exists.
-5. Wait for lifecycle completion and verify Computer health.
-6. Install and verify required skills; complete their setup actions and authentication in dependency order.
-7. Configure channels and complete any user login flow; probe status.
-8. Add customer-authored workspace artifacts or browser helpers.
-9. Create Tasks or schedules only after the required capabilities are verified.
-10. Run a representative task and inspect its linked replicated chat, tool calls, result, and relevant resource state.
+2. Ask how the Computer Agent should reach a responsible person when it needs input or cannot
+   proceed. Confirm an existing route or record the user's chosen route before unattended work.
+3. Create or update Agent staging with instructions, an available `agentModel`, heartbeat behavior, and assigned skill instructions.
+4. Read staging back. Publish only when approved and verify live.
+5. Read the Computer account status and provision only if no usable deployment exists.
+6. Wait for lifecycle completion and verify Computer health.
+7. Install and verify required skills; complete their setup actions and authentication in dependency order.
+8. Configure channels and complete any user login flow; probe status.
+9. Add customer-authored workspace artifacts or browser helpers.
+10. Create Tasks or schedules only after the required capabilities are verified; verify a reachable
+    escalation route before activating unattended work.
+11. Run a representative task and inspect its linked replicated chat, tool calls, result, and relevant resource state.
 
 ## Lifecycle, health, diagnostics, and backups
 
@@ -179,6 +182,30 @@ inbound routing to the Agent in the path. Do not add a separate Agent account in
 For Browser/device login channels, start `/channels/web-login/start`, present the returned user
 action, wait through `/channels/web-login/wait`, then probe channel status. A started login is not a
 working connection. Use `/channels/logout` only with explicit intent and verify disconnection.
+
+## Escalation and time-sensitive input
+
+For each Computer Agent, ask the user to designate a primary way to reach the responsible person
+and an optional fallback. Capture the destination, which situations justify contact, any response
+window or contact hours, and how approval or verification-code requests should be answered. If a
+route is already recorded, confirm it when the owner or unattended workflow changes rather than
+asking for the same details on every Task. "Reply in this chat" is a valid choice for attended
+work; arrange a reachable channel before activating unattended Tasks or schedules.
+
+Use only a channel or communication operation available to the selected Agent. Read its catalog or
+current status, send one representative test with the user's consent, and verify delivery or the linked Task
+outcome. Offer Slack only when that Agent has a supported, connected Slack route. Record the chosen
+non-secret policy in supported Agent configuration, preserving unrelated staging fields, and
+verify it after publish. Do not put contact policy in Computer runtime files as a substitute for a
+durable Agent setting.
+
+When a website asks for a time-limited verification code, reach the specific input step before
+requesting the code. Identify the site and the pending action to the user, then remain in the same
+session and Browser tab while waiting. On reply, first check that the response belongs to that
+pending request, came through the agreed path, and is still timely. Enter it once promptly and
+verify the site's result; if the challenge expired or changed, request a fresh code. Do not copy
+codes into Agent instructions, Task context, memory, workspace files, or work logs. A normal queued
+message or Task response does not by itself guarantee a low-latency handoff.
 
 ## Workspace files and reusable helpers
 
@@ -358,6 +385,7 @@ A complete Computer Agent setup report identifies:
 - provisioned lifecycle and health state
 - installed and verified skills
 - channel connection/probe state
+- chosen escalation route and representative delivery result
 - heartbeat configuration and synchronization result
 - representative Task ID and terminal state
 - linked replicated Vida chat containing the work and tool calls

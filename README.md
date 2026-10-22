@@ -62,6 +62,15 @@ without displaying it and perform the read-only account check below.
    secure secret store or a private environment variable. Do not paste it into
    chat, a repository, a `.env` file, a Task, or an assistant work log.
 
+For work across selected customer organizations, a user can keep separate keys as separate private
+secrets in the agent runtime. Label each secret with the organization it is intended to reach and
+let the assistant verify its actual scope with an untargeted account read before using it. The
+skill then selects the verified credential for each target Agent. Do not place the secret values or
+a plaintext credential map in this repository or a workspace file. If the host has no private way
+to supply several keys, use the appropriate key for the current session rather than claiming it is
+persistently stored. Vida's published setup steps do not currently specify an organization-key
+creation page; obtain such a key only through a supported Vida flow.
+
 For a local Codex or Claude Code CLI session in Bash, you can enter the key without
 echoing it or saving it in shell history:
 
