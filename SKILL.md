@@ -279,3 +279,7 @@ do not publish them to another repository under this protocol.
   before resubmitting.
 - Asynchronous failure: inspect the terminal job, Task, run, linked conversation, and bounded logs
   before proposing remediation.
+
+- API connection timeout or Browser host unavailable: follow the outage triage in
+  `references/computer-agent-configuration.md` before treating a login, Task, or patient action as
+  failed or retrying it. A reachable `vida.io` page does not prove the API or Computer is healthy.
