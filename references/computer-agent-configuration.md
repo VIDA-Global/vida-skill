@@ -364,3 +364,45 @@ A complete Computer Agent setup report identifies:
 - any unresolved requirement or user action
 
 Do not infer completion from an accepted job, login start, Task enqueue, or repair request.
+
+
+### API and Browser outage triage
+
+When an API call times out at connection or an Agent Browser says its host is unavailable, preserve
+the current work checkpoint before recovery. Record the exact operation, target account, UTC time,
+transport or HTTP error, and whether the action was read-only, accepted, or has an uncertain result.
+Never log tokens, cookies, login codes, patient data, or full URLs containing query credentials or
+Browser access tickets. Do not repeat a patient inquiry or write with an uncertain outcome.
+
+1. **Separate local transport from service availability.** In the same execution context, check a
+   known reachable public site and the API host listed in the *current* OpenAPI `servers` entry.
+   If the sandbox blocks both, repeat a bounded read-only connectivity check through an approved
+   network path. A successful `vida.io` page load establishes only that site, not the API or Agent
+   Browser. DNS resolution alone does not establish TCP, TLS, API authentication, or Computer health.
+   Do not disable TLS verification or send the API token to an undocumented alternate host.
+2. **Classify the failure before changing state.** Distinguish DNS failure, TCP/TLS timeout, an HTTP
+   response from the API, an authenticated account response, per-account Computer health, and the
+   exact Agent Browser capability. Any HTTP response proves the connection reached a server; it
+   does not prove authentication or health. If one DNS address fails, compare the other currently
+   published addresses using the original hostname for TLS. Treat a process-local DNS pin as a
+   temporary diagnostic workaround only after proving that address works; remove or re-evaluate it
+   when the published records or connection results change. If all addresses fail, do not blame a
+   single stale pin or claim a local repair fixed the service.
+3. **Use Vida repair only when the API responds.** Read the selected account's `/status`,
+   `/runtime/health`, and `/runtime/diagnostics`; inspect bounded logs and the exact failed
+   capability. Confirm the selected Agent and whether its Computer is shared before any repair or
+   restart. Use `/runtime/repair` only for a finding it supports, with its documented confirmation;
+   poll the job to a terminal result and recheck health *and* Browser or helper access. An API
+   connection timeout cannot be fixed by a repair request that cannot reach the API. Avoid blind
+   restarts, cookie resets, reprovisioning, or changing another Agent's Browser session.
+4. **Resume from evidence.** Once connectivity returns, inspect the actual Task `/runs` history,
+   helper result, correlation ID, and destination state for every uncertain action. Cached status,
+   a green Task definition, or an accepted request is not proof of completion. Reconcile the saved
+   checkpoint before new patient submissions or writes; retry only work proved untouched. Verify
+   the exact target Agent's Browser and authenticated portal separately. Preserve other portal
+   refresh schedules unless their own run evidence requires a change.
+
+If the API or Browser remains unavailable, retain a sanitized incident bundle with timestamps,
+published API hostname, failure class, affected capabilities, and bounded retry results. Escalate
+the service incident through an authorized channel. Report the user workflow as blocked at the
+specific remaining step; a skill or local DNS change alone does not prove the service recovered.
