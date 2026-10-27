@@ -365,8 +365,7 @@ A complete Computer Agent setup report identifies:
 
 Do not infer completion from an accepted job, login start, Task enqueue, or repair request.
 
-
-### API and Browser outage triage
+## API and Browser outage triage
 
 When an API call times out at connection or an Agent Browser says its host is unavailable, preserve
 the current work checkpoint before recovery. Record the exact operation, target account, UTC time,
