@@ -22,7 +22,7 @@ Never use an `agentConfigId` as `targetAccountId`. Public requests and explanati
    - `GET /api/v2/apps?targetAccountId=...`
 5. Send only intended writable settings to `POST /api/v2/agent?targetAccountId=...`. Omitted settings retain their staging values.
 6. Re-read staging and compare every intended field.
-7. Test staging when the change affects conversations or tool behavior.
+7. Test staging when the change affects conversations or tool behavior. If no test operation is exposed, read `references/app-assistance.md` for the existing app staging preview, guide an authorized customer test and inspect actual messages. A prompt read-back alone is not a runtime test.
 8. Publish only with explicit intent using `POST /api/v2/agent/publish?targetAccountId=...`.
 9. Re-read `/agentEventRules/default` and verify the live values.
 
@@ -53,6 +53,12 @@ Select the exact `agentVoice` from `/agent/voices`. Check `accountAvailability.a
 - `agentLang` is the Vida language mode. Follow the OpenAPI enum and the selected voice's advertised languages.
 
 Do not migrate the frontend's hard-coded catalog or invent voice IDs. The API catalog is the integration source of truth.
+
+Keep the authenticated requester separate from `targetAccountId`: developer API eligibility
+belongs to the requester, while voice availability is evaluated for the selected account.
+An empty catalog or a failed read is not proof that payment is required. An empty `languages`
+list supplies no verified language metadata; use documented provider support or an authorized
+preview to verify the requested language rather than inventing a language list.
 
 ## Phone and SIP setup
 
