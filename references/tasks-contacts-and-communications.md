@@ -189,45 +189,9 @@ Convenience operations `POST /api/v2/agent/outboundCall`, `/outboundSms`, and `/
 create Tasks. Use the same Agent in query `targetAccountId` and body `accountId`. Follow OpenAPI for
 single versus multiple recipients, message content, subject, attachments, schedule, and spacing.
 
-### Outbound email attachments
-
-`POST /api/v2/agent/outboundEmail` expects SendGrid-style attachment objects with base64 file
-content. Read the file's bytes in the environment that owns it and base64-encode those bytes into
-`content`. Include `filename`, the MIME `type` (for a PDF, `application/pdf`), and
-`disposition:"attachment"`. Encode the file bytes once; do not encode its path or a data-URL prefix.
-
-For example, construct a PDF attachment in Python before adding it to the request body:
-
-```python
-import base64
-from pathlib import Path
-
-report = Path("reports/qa-summary.pdf")
-attachment = {
-    "content": base64.b64encode(report.read_bytes()).decode("ascii"),
-    "filename": report.name,
-    "type": "application/pdf",
-    "disposition": "attachment",
-}
-# Add this to the outboundEmail body: "attachments": [attachment]
-```
-
-A Computer-local absolute or workspace-relative path is not an attachment payload. Do not pass
-`{"path":"reports/qa-summary.pdf","filename":"qa-summary.pdf"}` to `outboundEmail` or assume
-the email sender will fetch the file from the Computer. If the calling environment cannot read the
-file, retrieve it through the documented workspace download operation before encoding it. Do not
-queue a placeholder attachment or silently omit a requested report.
-
-Keep query `targetAccountId` and body `accountId` on the selected Agent and retain the authorized
-recipients. Save the returned Task ID, poll its scoped Task read to a terminal state, and inspect
-`result` plus the linked communication. An HTTP 200 or `Outbound email initiated` means queued;
-it can still end `errored` with `problem sending email from agent` for a path-only attachment.
-For that error, inspect the saved attachment payload before retrying. Reconcile any uncertain send
-before creating a replacement Task, and correct a known malformed payload rather than repeating it.
-Report provider acceptance only when supported by the Task result; acceptance alone does not prove
-inbox delivery.
-
-### Inbound email replies
+`outboundEmail` attachments require base64-encoded file bytes in `content`, plus `filename`, MIME
+`type` (e.g. `application/pdf`), and `disposition:"attachment"`. Read and encode the file before
+submission; Computer-local `path` values are unsupported.
 
 Before relying on an inbound-triggered email reply, read the Agent's inbound policy and allowlist. In
 `allowlist` mode, the exact originating sender must already be listed; otherwise Vida creates no
