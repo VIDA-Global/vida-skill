@@ -251,4 +251,3 @@ Task and linked communication evidence.
 For a complete retry-aware communication workflow, use
 `https://vida.io/docs/api-reference/cookbooks/outbound-workflow` with this reference and current
 OpenAPI schemas.
-
