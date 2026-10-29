@@ -116,6 +116,37 @@ The API intentionally does not add function-specific validation beyond the curre
 
 Root-level relationships include transfer confirmation/monitoring/attended-transfer controls, recording notice settings, speech timing, the thinking model for Pause & Think, and typed reporting fields. Read the OpenAPI `AgentConfigurationWrite` schema for the complete approved writable set.
 
+### Webhook actions and Secrets
+
+Agent webhook actions can use values saved in **Settings → Secrets**. Keep the saved secret ID
+in the action configuration with `{{secrets.SECRET_ID}}`; Vida resolves the value immediately
+before sending. For example, configure the webhook's Authorization header as:
+
+```text
+Authorization: Bearer {{secrets.api-key}}
+```
+
+Placeholders work in URL strings, header values, and body string values, including nested objects
+and arrays, for JSON or form-encoded requests. IDs containing hyphens or slashes are supported,
+such as `{{secrets.skills/entries/example/password}}`; whitespace inside the delimiters, as in
+`{{ secrets.api-key }}`, is also accepted. Object keys are not substituted. URL substitutions are
+literal, so prefer headers for credentials rather than relying on automatic URL encoding.
+
+Resolution uses the sending Agent account's managed-secret hierarchy. Ensure the saved secret is
+available to that account; a caller-supplied account ID in function arguments does not change this
+scope. Values are resolved for each request without secret-value caching. If a referenced secret
+is missing or lookup fails, the webhook fails before sending.
+
+Configure secret references rather than copying resolved values into Agent configuration,
+instructions, or function arguments. Returned webhook request/response data and network errors
+mask resolved values, including URL/form-encoded forms, back to secret placeholders. Do not
+manually retrieve a secret merely to populate the webhook.
+
+After configuring staging, test against an authorized endpoint to confirm authentication and the
+expected response, and check that returned webhook data keeps secret values masked. These are
+Agent function webhook actions; event webhooks and inbound provider relays are covered in
+[Platform Administration](platform-administration.md#webhooks-and-relays).
+
 ## Apps
 
 Use the app lifecycle API to discover and prepare an app before assigning it to an agent:

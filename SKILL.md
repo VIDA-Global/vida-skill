@@ -106,7 +106,7 @@ Read only the references needed for the current workflow, but read each selected
 before acting:
 
 - `references/voice-agent-configuration.md`: Agent settings, model/voice/function/App discovery,
-  staging, publishing, phone/SIP, reporting fields, versions, and experiments
+  webhook actions with Secrets, staging, publishing, phone/SIP, reporting fields, versions, and experiments
 - `references/computer-agent-configuration.md`: Computer provisioning, configuration boundaries,
   health, logs, diagnostics, repair, backups, skills, credentials, channels, workspaces, Browser
   access, reusable helpers, memory, sessions, and schedules
