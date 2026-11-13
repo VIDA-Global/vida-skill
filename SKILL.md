@@ -1,13 +1,14 @@
 ---
 name: vida-api
-description: "Use the Vida API to configure and operate Agents, Computer Agents, Contacts, Tasks, communications, reporting, and authorized platform administration."
+description: "Build, configure, verify, and operate Vida Agents and Computer workflows through the Vida API, including Skills, Helpers, Tasks, communications, reporting, and authorized platform administration."
 ---
 
-# Vida API
+# Vida
 
-Use this skill when creating, configuring, operating, or troubleshooting Vida resources through the
-API. It supplies workflow and verification rules; the live OpenAPI document supplies exact request
-and response schemas.
+Use this skill to turn a business workflow into a working Vida Agent, extend an existing Agent, or
+operate and troubleshoot Vida resources through the API. This is the complete Vida build and
+operations skill. It supplies workflow and verification rules; the live OpenAPI document supplies
+exact request and response schemas.
 
 ## Sources of truth
 
@@ -91,14 +92,25 @@ The first key cannot be created through `/api/v2/tokens` because that operation 
 authentication. After the user securely supplies the key, restart this preflight with
 `GET /api/v2/account` before performing scoped work.
 
-## Related workflow skill
+## Build or extend an Agent
 
-When the request is to turn a software workflow into a complete Vida Agent—including optional
-opportunity research, browser helpers, schedules, Canvas, demo videos, landing pages, or launch
-content—use [`$build-vida-agent`](https://github.com/VIDA-Global/build-vida-agent-skill).
-That skill orchestrates the end-to-end build and uses this `vida-api` skill for every exact Vida API
-operation, scope decision, safety boundary, and verification step. Do not load it for ordinary API
-operation of an already-finished Agent.
+For a complete Agent build or workflow extension, read
+[references/agent-building.md](references/agent-building.md). It connects the business brief,
+account placement, access, implementation, and acceptance checks using this skill's references.
+For routine operation of an existing capability, load only its relevant reference below.
+
+## Required Computer Agent build standard
+
+Before creating, extending, or reorganizing a Computer Agent workflow, read
+[references/computer-agent-build-standard.md](references/computer-agent-build-standard.md).
+Build Computer workflows as **Task → Skill → Helpers**: repeating Tasks trigger recurring work,
+the owning skill defines the procedure, and registered helpers perform Computer operations.
+On-demand requests use the same skill/helper structure without an unnecessary schedule.
+Keep source and files in their owning skill, with generated results under `outputs/` and disposable
+work under `tmp/`. Do not deliver workflows that depend on
+heartbeats, conversational memory, workspace browsing, or ad hoc scripts. Management APIs remain
+available for construction and authorized maintenance; this rule does not remove APIs or authorize
+changing unrelated existing work.
 
 ## Load the relevant reference
 
@@ -109,7 +121,7 @@ before acting:
   webhook actions with Secrets, staging, publishing, phone/SIP, reporting fields, versions, and experiments
 - `references/computer-agent-configuration.md`: Computer provisioning, configuration boundaries,
   health, logs, diagnostics, repair, backups, skills, credentials, channels, workspaces, Browser
-  access, reusable helpers, memory, sessions, and schedules
+  access, reusable helpers, schedules, and existing memory/heartbeat maintenance
 - `references/computer-agent-cloning.md`: same-organization functionality replication and
   cross-organization sanitized cloning, including portable-resource boundaries, target-local
   authentication, clone planning, and acceptance evidence

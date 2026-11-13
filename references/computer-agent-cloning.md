@@ -8,7 +8,27 @@ required resources.
 Do not use backup restore as cloning. Backups contain saved Computer state and are for recovery of
 the owning Computer, not for creating a portable customer template.
 
-## Choose the mode from resolved account scope
+Follow [computer-agent-build-standard.md](computer-agent-build-standard.md) for the target workflow.
+Inventory its owning skill, registered helpers, required resources, trigger, state sources, and
+authentication dependencies. Rebuild approved loose source into the target's skill package; do not
+carry forward dependencies on source memory, heartbeats, builder sessions, or scratch directories.
+Schedules remain excluded from automatic copying; recreate a required target Task deliberately
+within the user's authorized scope. Record unresolved dependencies rather than claiming a portable
+clone. Do not reorganize or delete source artifacts as incidental cleanup.
+
+## Choose packaging or deployment
+
+If the user asks only to package a capability, prepare reviewed or sanitized `SKILL.md`, helpers,
+references, and required static assets, plus a dependency inventory, named target bindings, and
+deployment/acceptance instructions. Exclude customer outputs, temporary files, secrets, and runtime
+state. Apply the cross-organization sanitization gate below when intended for another customer.
+Unresolved target bindings can remain named inputs; packaging does not require target provisioning,
+login, configuration changes, execution, or publication. Report the package as prepared, not deployed.
+
+For replication or deployment to an actual target, continue with the account and acceptance checks
+below. A source package alone does not prove target readiness.
+
+## Choose the deployment mode from resolved account scope
 
 Read both Agent accounts and compare their `organizationId` values before planning:
 
@@ -52,7 +72,7 @@ machine.
 | Agent and skill instructions | Reuse only after client review | Semantically sanitize into neutral instructions and target bindings |
 | Generic catalog skill | Reuse target-discovered catalog item | Install target-discovered catalog item |
 | Customer-authored skill/helper source | Review, recreate in the target Agent workspace, and test | Sanitize, place under a neutral target slug in the target Agent workspace, and test |
-| Generated or legacy `domain_helpers/` helper | Reuse only on the shared Computer | Rebuild under `skills/{neutralSlug}/helpers/` or generate from target-local evidence |
+| Generated or legacy `domain_helpers/` helper | Repackage approved source under the target owning skill's `helpers/` and test | Rebuild under `skills/{neutralSlug}/helpers/` or generate from target-local evidence |
 | `computerDelegateAccountId` | May identify the approved organization Computer | Must resolve inside target scope |
 | Browser profile and login | Rebuild in the target Agent profile | Rebuild in the target Agent profile |
 | Secret values | Do not duplicate by default; approved inherited fallback may already apply | Never copy; collect or authorize target values through managed-secret flows |
@@ -60,7 +80,13 @@ machine.
 | Links, tenant URLs, reporting rules, webhooks, phone, SIP | Separate review and approval | Replace with target-owned values under separate approval |
 | Memory, sessions, messages, Tasks, schedules, contacts, communications, logs | Exclude by default | Exclude |
 | Backups, workflow recordings, screenshots, DOM evidence | Exclude | Exclude; create target-local evidence when needed |
-| Workspace customer data | Exclude | Exclude |
+| Workspace customer data, including skill `outputs/` | Exclude | Exclude |
+
+Select the authored `SKILL.md`, helper source, references, and required static assets explicitly.
+Do not copy an entire skill directory without excluding `outputs/` and `tmp/`: being under the skill
+does not turn customer results into reusable template source. Preserve source outputs under their
+retention policy. Transferring retained results for the same customer is a separate scoped data
+operation, not an automatic part of capability cloning.
 
 Read `/skills/state`, `/skills/catalog`, `/helpers`, and only the specific authored workspace files
 needed for the requested functionality. Read `/secrets` only for declared secret metadata. Do not
@@ -121,8 +147,10 @@ logs.
    OAuth, or device login. Never transfer authentication state.
 7. Execute each helper with safe representative target input and verify its structured result and
    destination effect.
-8. Read target `/agent/functions`, stage the exact allowed Computer action, and run a staged
-   conversation that actually selects and uses the helper.
+8. Test the intended target entry point in a fresh execution. For conversational delivery, read
+   target `/agent/functions`, stage the exact allowed Computer action, and run a staged conversation
+   that selects and uses the helper. Task-driven or direct-helper delivery does not require adding
+   a conversational action solely for acceptance.
 9. Publish only with explicit approval, re-read live configuration, repeat `/skills/state`, and
    repeat the representative capability test.
 
