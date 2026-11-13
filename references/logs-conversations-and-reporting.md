@@ -99,3 +99,8 @@ impact, and remaining uncertainty. Keep raw diagnostics separate from the custom
 For a complete incident sequence, use
 `https://vida.io/docs/api-reference/cookbooks/investigate-agent-work` with this reference and current
 OpenAPI schemas.
+
+When building a recurring Computer reporting workflow, put the query/export operations in registered
+helpers and the procedure in an owning skill. Store generated CSVs or reports in that skill's
+`outputs/{runId}/`, return their delivery references, and keep disposable processing files in
+`tmp/{runId}/`. A one-time API investigation does not require building a new automation.

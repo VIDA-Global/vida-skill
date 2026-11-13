@@ -131,6 +131,13 @@ representative Task before increasing volume.
 
 ## Computer Tasks
 
+For new or changed workflows, follow
+[computer-agent-build-standard.md](computer-agent-build-standard.md): `taskContext` names the owning
+skill and supplies business inputs, scope, limits, and the desired outcome. The skill contains the
+procedure and exact registered helper sequence. Do not copy the procedure into each Task or ask the
+Agent to browse the workspace, recover instructions from memory, or run loose scripts. Task creation
+has no typed skill/helper binding; do not invent request fields for one.
+
 Use `type:"computer"` for one bounded piece of work on a provisioned Computer Agent. It requires the
 executing `accountId` and complete `taskContext`, and may include title, schedule time, correlation,
 and reporting metadata. Do not add communication targets, retry policies, Contact context, or raw
@@ -151,6 +158,10 @@ replication is still pending. Save `taskId` and poll the returned `resultRef.hre
 retrying an uncertain request.
 
 ## Repeating and one-off Tasks
+
+Repeating Tasks are the required trigger for new recurring Computer workflows. Do not implement
+their cadence through heartbeats, runtime cron files, or an Agent remembering to check again.
+On-demand workflows use the same skills and registered helpers without requiring a schedule.
 
 Create schedules through the Task API, not private metadata:
 

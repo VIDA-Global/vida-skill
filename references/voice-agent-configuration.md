@@ -13,7 +13,8 @@ Never use an `agentConfigId` as `targetAccountId`. Public requests and explanati
 ## Read, change, verify, publish
 
 1. Read `GET /api/v2/agentEventRules/staging?targetAccountId=...`.
-2. If staging is empty, read `GET /api/v2/agentEventRules/default?targetAccountId=...` for the live configuration.
+2. Read `GET /api/v2/agentEventRules/default?targetAccountId=...` for live configuration. Use it as
+   the editing base if staging is empty; otherwise identify any preexisting staging/live differences.
 3. Save the original response before editing.
 4. Discover dynamic values and account eligibility:
    - `GET /api/v2/models/supported?targetAccountId=...`
@@ -23,7 +24,10 @@ Never use an `agentConfigId` as `targetAccountId`. Public requests and explanati
 5. Send only intended writable settings to `POST /api/v2/agent?targetAccountId=...`. Omitted settings retain their staging values.
 6. Re-read staging and compare every intended field.
 7. Test staging when the change affects conversations or tool behavior.
-8. Publish only with explicit intent using `POST /api/v2/agent/publish?targetAccountId=...`.
+8. Confirm the intended release includes all staging/live differences, then publish with explicit
+   intent using `POST /api/v2/agent/publish?targetAccountId=...`. Publishing releases the staged
+   configuration, not just this edit. Preserve unrelated staged work and do not release it unless
+   it is within the authorized scope.
 9. Re-read `/agentEventRules/default` and verify the live values.
 
 Arrays such as `actions`, `apps`, `skills`, and `reportingFields` are complete authored arrays when supplied. Read and preserve members the user did not ask to remove. Do not write calculated response fields such as function `allowed`, `reason`, or `missingRequirement`, `activeEventRules`, or `effectiveReportingFields`.
@@ -109,8 +113,10 @@ not need Browser access, and `@browser_function(...)` only when the helper requi
 Configure the exact `computer` action returned by the catalog and map conversation values to the
 registered helper's exact argument names. A Computer Agent uses its own Computer automatically; set
 `computerDelegateAccountId` only when it must use another Agent's Computer. The `browser` action is
-for ad hoc live-Browser work, not registered helpers. Use ordinary Computer delegation for novel or
-multi-step work rather than forcing it into one helper.
+for ad hoc live-Browser exploration during construction, not registered helpers. For a delivered
+Computer workflow, follow [computer-agent-build-standard.md](computer-agent-build-standard.md):
+put multi-step procedures in an owning skill that composes registered helpers. General Computer
+delegation can help investigate novel work during construction; it must not replace that structure.
 
 The API intentionally does not add function-specific validation beyond the current Agent update behavior. Use the function guide and current configuration shape; do not infer unsupported fields.
 
