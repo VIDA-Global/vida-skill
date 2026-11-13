@@ -91,6 +91,27 @@ The first key cannot be created through `/api/v2/tokens` because that operation 
 authentication. After the user securely supplies the key, restart this preflight with
 `GET /api/v2/account` before performing scoped work.
 
+### Multiple customer credentials
+
+When a user has separately authorized keys for selected customer organizations, keep each value in
+that user's private runtime secret store under a distinct handle. Record only the verified owning
+account or organization ID and the secret handle in the user's credential selector; never put key
+values in a skill file, repository, Task, chat, or work log. `VIDA_API_KEY` remains the single-key
+default when no selector is available. If the runtime cannot privately supply the selected key, ask
+the user to make it available through that runtime's secret mechanism before proceeding.
+
+Run the untargeted account preflight separately for each newly supplied or rotated key. For a
+requested Agent change, resolve the Agent's organization and select a key whose verified scope
+allows that target, respecting any `permittedAccountIds` restriction. Confirm the target with a harmless read using
+the selected key before mutation. If no key matches or several handles remain ambiguous, ask the
+user which authorized credential to use. Do not try unrelated keys against the target or silently
+fall back to a reseller, partner, or Super Admin key after a scope error. Keep the selected key
+bound to the target throughout the workflow; repeat selection when the target changes.
+
+The public setup guide currently documents Agent, reseller, and partner key creation paths. Do not
+invent an organization-key creation path; verify how that organization obtained its key or direct
+the user to Vida for a supported issuance method.
+
 ## Related workflow skill
 
 When the request is to turn a software workflow into a complete Vida Agent—including optional
