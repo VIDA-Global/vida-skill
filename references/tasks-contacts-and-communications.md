@@ -189,6 +189,10 @@ Convenience operations `POST /api/v2/agent/outboundCall`, `/outboundSms`, and `/
 create Tasks. Use the same Agent in query `targetAccountId` and body `accountId`. Follow OpenAPI for
 single versus multiple recipients, message content, subject, attachments, schedule, and spacing.
 
+`outboundEmail` attachments require base64-encoded file bytes in `content`, plus `filename`, MIME
+`type` (e.g. `application/pdf`), and `disposition:"attachment"`. Read and encode the file before
+submission; Computer-local `path` values are unsupported.
+
 Before relying on an inbound-triggered email reply, read the Agent's inbound policy and allowlist. In
 `allowlist` mode, the exact originating sender must already be listed; otherwise Vida creates no
 inbound message, `email.received` event, or Agent work. `open` mode accepts any sender that passes

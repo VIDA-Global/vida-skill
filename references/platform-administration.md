@@ -143,6 +143,10 @@ uses `allowlist`.
 
 ## Webhooks and relays
 
+For Agent function webhook actions that use saved Secrets, see
+[Webhook actions and Secrets](voice-agent-configuration.md#webhook-actions-and-secrets).
+The event webhooks and provider relays below are separate integrations.
+
 Event webhooks send Vida events to your system. Webhook relays forward supported inbound provider
 events through your application before Vida processes them. Do not substitute one for the other.
 

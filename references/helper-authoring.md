@@ -119,6 +119,33 @@ sensitive guided setup actions automatically. Do not also model helper credentia
 requirements. Verification checks registration and credential presence but deliberately does not
 execute the helper; keep safe representative execution as a separate acceptance step.
 
+## Browser credentials and execution paths
+
+For Browser login helpers, use `@browser_function(...)` with the live Browser context and declare
+the exact username and password IDs, for example
+`required_secrets=["example_portal_user", "example_portal_password"]`. Read each value with
+`managed_secret("example_portal_user")` or `managed_secret("example_portal_password")` inside the
+helper, pass it directly to the Browser interaction, and return only nonsecret status. Reuse an
+authenticated session when available and verify the expected authenticated page after a login.
+
+On a Computer with managed-secret runtime support, `vida-browser-helper <helperName> '<jsonArgs>'`
+resolves declared credentials for the selected Agent and delivers them to the helper. Direct
+`browser-harness` Python can import `managed_secret` to retrieve requested IDs in memory for ad hoc
+Browser work. Registered
+helpers must still declare every required ID so registration, setup, and execution agree. A
+credential value never belongs in command arguments, JSON inputs, source, logs, files, or results.
+
+Test the execution path the Agent uses. First exercise a safe readiness helper returning only
+availability booleans, then an authorized representative Browser operation with a verified page
+result. If the saved values and declared IDs match but the CLI returns `missing_helper_secrets`,
+investigate the local runtime delivery. If direct Python cannot import `vida_helper_runtime`,
+report the incomplete or outdated runtime installation. Do not print the secret resolver's plaintext
+output as a workaround. A custom ID's `unsupported_secret_target` deployment check means it has no
+automatic OpenClaw configuration mapping; it does not mean helpers cannot use the stored value.
+Do not request replacement credentials or change storage on the strength of that label or a local
+CLI error. Check the selected Agent's secret metadata and declared IDs, then verify the actual
+local execution path before diagnosing a missing credential.
+
 ## Build and acceptance workflow
 
 1. Read the existing owning skill and helper path before writing. Use `POST /workspace/write` with

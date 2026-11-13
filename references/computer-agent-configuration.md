@@ -133,6 +133,52 @@ runtime env/config, install steps, or manual setup retain the general verificati
 The Agent configuration's `skills[]` supplies Agent-specific usage instructions; it does not install
 or authenticate the package. Restricted Computer runtime credentials cannot manage secrets.
 
+### Custom IDs and Browser credentials
+
+A custom target ID is an exact managed-secret key, such as `example_portal_user` or
+`example_portal_password`. It does not automatically become an environment variable or an OpenClaw
+configuration field. Read `/secrets` metadata for the selected Agent, then compare those IDs with the
+helper's `requiredSecrets` from `/helpers`. Preserve spelling, case, punctuation, and the selected
+Agent account. An organization-level value can be an inherited fallback; another Agent's value is
+not a substitute.
+
+In `/secrets/check`, `hasStoredValue` describes storage while `deployment.supported` describes an
+automatic OpenClaw configuration mapping. A custom helper credential can have
+`hasStoredValue:true` and deployment `unsupported` with reason `unsupported_secret_target` and still
+work through helpers. Prove delivery by executing the helper rather than repeatedly reapplying an
+unsupported configuration target.
+
+Do not diagnose missing credentials, ask the user to re-enter them, or change secret storage based
+only on a UI deployment label or local CLI error. Compare the selected Agent's stored metadata and
+the helper's declared IDs, then test the actual local Browser execution path.
+Use that execution evidence to identify a missing value, an invocation failure, or a portal login
+challenge. Email verification or MFA after form submission is a separate authentication step.
+
+For an authorized Browser login, use this sequence:
+
+1. On the Computer, prefer an existing login helper with the exact username and password IDs in
+   `requiredSecrets`. Run `vida-browser-helper <helperName> '<jsonArgs>'` with business inputs only.
+2. For ad hoc `browser-harness` Python, use `from vida_helper_runtime import managed_secret` and
+   pass values directly to Browser interactions. Reusable helpers declare both IDs in literal
+   `required_secrets` metadata. Configure values through `/secrets`.
+3. Prove credential delivery with a safe helper result containing only availability booleans, then
+   test the real Browser operation and verify authenticated page state. Credential presence alone
+   does not prove a login succeeded. Preserve a valid existing session.
+4. Inspect the Agent's actual tool path in its linked conversation. Test the local helper command
+   or direct `browser-harness` Python path that the Agent will actually use.
+
+Containers with managed-secret runtime support resolve only the registered helper's declared IDs
+automatically for `vida-browser-helper <helperName> '<jsonArgs>'`. Their direct `browser-harness`
+Python can import `managed_secret` to retrieve an exact ID in memory for ad hoc Browser work.
+If the saved values and declared IDs match but local delivery fails, investigate the container
+runtime. A missing runtime module indicates an incomplete or outdated installation. Verify the
+updated container before claiming the local path works. During rollout, deploy
+backend support for selected-Agent runtime secret resolution before upgrading the container. A
+`helper_secret_resolution_failed` result requires checking that backend/runtime compatibility and
+the selected Agent context. Never work around this by printing resolver output, dumping environment
+variables, writing credential files, or putting
+values in Task context, helper arguments, or results.
+
 ## Channels
 
 Read `/channels/catalog` and `/channels/status` before changing a connection. Configure only fields
@@ -262,6 +308,27 @@ header and connect to the returned WebSocket before expiry. For local CDP automa
 Harness is the recommended client: fetch `/json/version` with the required header, then provide the
 returned ticket-bearing `webSocketDebuggerUrl` as `BU_CDP_WS`. Do not give Browser Harness the
 protected discovery URL as `BU_CDP_URL` when it cannot send the required discovery header.
+
+### Reuse Browser tabs during Computer Tasks
+
+Treat the Computer Agent's Browser profile as persistent across `browser-harness` commands and
+Computer Tasks. Use the fewest tabs needed for the workflow:
+
+1. Inspect the current tab and existing tabs before opening one. Reuse a relevant authenticated tab
+   for the target site. Navigate that tab with `goto_url(...)` when a different page is needed;
+   inspect or interact with the current page without navigating when it is already correct.
+2. Use `new_tab(...)` only for the first navigation when no usable tab exists, or when the workflow
+   requires a second page at the same time. The Browser Use skill's “first navigation” instruction
+   applies to the Browser session, not to every new heredoc or tool call. Do not open another copy of
+   a form just to inspect its DOM, locate a control, or retry a failed interaction.
+3. Before retrying after a timeout or failed form step, inspect the existing tab and any unsaved
+   state. Reuse it when safe. Close duplicate or blank tabs that the workflow created, while keeping
+   at least one usable tab open. Do not close a user's unrelated tabs.
+
+Include this tab plan in customer-authored Browser skills and Computer Task instructions. For a
+single-site form workflow, verify that the Agent continued in the same tab through inspection,
+entry, save, and confirmation unless a second tab was necessary. When diagnosing tab growth through
+CDP, count targets with `type:"page"`; embedded `iframe` targets are not separate tabs.
 
 Before recording, confirm no recording or generation is active. Start with the automation session's
 exact slot, perform one representative workflow, stop, retain `domainKey`, `recordingId`, and the
