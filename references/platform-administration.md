@@ -191,3 +191,9 @@ are not completion evidence.
 For a complete eligible-reseller onboarding sequence, use
 `https://vida.io/docs/api-reference/cookbooks/onboard-reseller-customer` with this reference and
 current OpenAPI schemas.
+
+For customer onboarding or template-based builds that include Computer workflows, follow
+[computer-agent-build-standard.md](computer-agent-build-standard.md). Verify the actual target skill
+packages, registered helpers, explicit triggers, and skill-owned output locations after applying
+configuration; configuration references alone do not prove that runtime dependencies are ready.
+Do not copy retained outputs or temporary files into reusable catalog skills or customer templates.

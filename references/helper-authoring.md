@@ -1,8 +1,14 @@
 # Reusable Helper Authoring
 
 Read this reference when an Agent needs to manually create or change a reusable Computer helper.
-Use the Browser workflow recording and generation APIs instead when the operation must be learned
-from a website.
+Use Browser exploration and recording when the operation must be learned from a website. Author
+reviewed helpers from that evidence or use managed generation; generation is optional.
+
+Follow [computer-agent-build-standard.md](computer-agent-build-standard.md) for every new or changed
+workflow. Helpers are the required Computer operation layer in a delivered workflow. Keep the
+procedure and required resources in the owning skill. Put generated file deliverables in that
+skill's `outputs/{runId}/` and disposable exploration or intermediate files in `tmp/{runId}/`.
+Keep required helper source out of those generated-file directories.
 
 ## Choose the helper type
 
@@ -12,6 +18,10 @@ from a website.
   or page state.
 - Keep reusable source with its owning skill under `skills/{skillSlug}/helpers/`. Do not edit the
   generated helper registry.
+- Helpers that create files write retained results to the owning skill's `outputs/{runId}/` and
+  disposable files to `tmp/{runId}/`. Derive paths from the owning skill, not an incidental working
+  directory. Declare returned output paths or artifact references in the result contract, use
+  distinct run directories, and preserve retained results under the workflow's retention policy.
 
 ## Browser-independent API example
 
@@ -149,10 +159,12 @@ local execution path before diagnosing a missing credential.
 ## Build and acceptance workflow
 
 1. Read the existing owning skill and helper path before writing. Use `POST /workspace/write` with
-   complete text for the `SKILL.md` and `.py` source, then read both back.
-2. Save every ID in `required_secrets` through `POST /secrets` with `{secretId, value}` for the
-   selected Computer Agent. Do not put secret values in a Task, Agent configuration, setup state, or
-   workspace file.
+   complete text for the `SKILL.md` and `.py` source, then read both back. Follow the frontmatter and
+   runtime-discovery checks in [computer-agent-configuration.md](computer-agent-configuration.md);
+   include the named helper sequence, decisions, and failure behavior in the skill procedure.
+2. Check the selected Agent's secret metadata for every ID in `required_secrets`. Save only missing
+   values or intended updates through `POST /secrets` with `{secretId, value}`. Do not put secret
+   values in a Task, Agent configuration, setup state, or workspace file.
 3. Call `POST /helpers/refresh`. Require `ok: true`; inspect every compile and registry finding and
    verify the expected callable contract in `functions`.
 4. Read `GET /helpers` and preserve the returned name and argument schema exactly.
@@ -161,11 +173,17 @@ local execution path before diagnosing a missing credential.
    `blocked`, or `need_user` result and verify every result field against the declared metadata.
 6. For mutating helpers, use an idempotency key when the destination API supports one. After a
    timeout or uncertain response, read the destination state before retrying.
-7. Discover the conversational Agent's available functions. Stage the exact `computer` action and
-   map conversation values to the registered argument names. Set `computerDelegateAccountId` only
-   when the helper belongs to another Agent's Computer.
-8. Run a staged conversational test and inspect its linked conversation. Publish only when helper
-   registration, direct execution, and conversational selection all succeed.
+7. If exposing the helper to a conversational Agent, discover that Agent's available functions.
+   Stage the exact `computer` action and map conversation values to the registered argument names.
+   Set `computerDelegateAccountId` only when the helper belongs to another Agent's Computer.
+8. Test the intended entry point. For a conversational deliverable, run a staged conversational test
+   and inspect its linked conversation. For a Task-driven workflow, test the Task with the owning
+   skill named in `taskContext`. Direct helper execution without those deliverables does not require
+   conversational selection. Publish only after registration, direct execution, and the intended
+   entry point all pass.
+
+Prove the delivered path works without the builder's prior chat, conversational memory, or scratch
+files. Declared source-system state and authenticated Browser profiles can be reused as intended.
 
 Refresh, list, and execute representative input after every helper-source change. The public guide
 is `https://vida.io/docs/api-reference/agent-guides/computer-agent-workspaces-and-helpers`.

@@ -2,13 +2,17 @@
 
 Read this reference when configuring the durable behavior of a Computer Agent or deciding whether a setting belongs in Agent staging or a purpose-built Computer Agent API.
 
+For any new or changed workflow, first follow
+[computer-agent-build-standard.md](computer-agent-build-standard.md). The APIs below support both
+construction and maintenance; their availability does not expand the permitted runtime structure.
+
 ## Configuration source of truth
 
 Use the normal Agent staging and publish flow for durable agent-owned behavior:
 
-- `agentInstructions`: primary operating instructions and persona
+- `agentInstructions`: role, persona, boundaries, and routing to skill-owned procedures
 - `agentModel`: model used for Computer Agent LLM requests through Vida
-- `heartbeatInstructions`, `heartbeatEvery`, and `heartbeatConfig`: proactive work
+- `heartbeatInstructions`, `heartbeatEvery`, and `heartbeatConfig`: existing heartbeat maintenance only; use repeating Tasks for new recurring work
 - `links`: published web knowledge
 - `skills`: assigned skill instructions synchronized at publish time
 - `computerDelegateAccountId`: Computer Agent delegated to by another Vida Agent
@@ -30,19 +34,21 @@ These are not versioned Agent settings and use purpose-built APIs:
 | Customer-authored project and skill files | `/workspace` |
 | Canvas source, publishing, and access | `/canvas` plus `/workspace` |
 | Browser access, recording, and reusable helpers | `/browser`, `/workflow-recordings`, `/helpers` |
-| Memory | `/memory` |
+| Existing memory maintenance | `/memory` |
 | Immediate or scheduled work | standard `/api/v2/tasks`; synchronous immediate execution under `/tasks/execute` |
 | Sessions and replicated chats | `/session`, `/api/v2/computer/sessions`, `/api/v2/messages` |
 | Diagnostics and bounded repair | `/runtime/diagnostics`, `/runtime/repair` |
 
 Read the existing resource before mutation, make the smallest change, and verify through that same resource's status or read endpoint.
 
-Create a reusable helper when another Agent needs one stable callable operation. Store its source
-with the owning skill, use `@computer_function(...)` when Browser access is unnecessary, configure
-its declared Agent secrets, and verify its exact contract through `/helpers`. A Computer Agent uses
+Create registered helpers for the Computer operations in every delivered workflow, whether used
+by this Agent or another Agent. Store their source with the owning skill, use
+`@computer_function(...)` when Browser access is unnecessary, configure their declared Agent
+secrets, and verify their exact contracts through `/helpers`. A Computer Agent uses
 its own Computer automatically. Set `computerDelegateAccountId` only when an Agent must use a
 different Agent's Computer. Registered helpers are exposed through the `computer` action; the
-`browser` action is for ad hoc work in the live Browser.
+`browser` action supports ad hoc exploration during construction, not routine execution of a
+delivered workflow.
 
 ## Initial setup order
 
@@ -56,15 +62,18 @@ subscription and deployment permission are verified; reuse an existing usable Co
 actually exists.
 
 1. Resolve the exact child account and its `targetAccountId`.
-2. Create or update Agent staging with instructions, an available `agentModel`, heartbeat behavior, and assigned skill instructions.
-3. Read staging back. Publish only when approved and verify live.
+2. Define each workflow's trigger, owning skill, helpers, required resources, and state/output locations using the build standard. Stage role/routing instructions and an available `agentModel`; do not add heartbeat-based workflow behavior.
+3. Read staging back. Reuse an existing published base configuration for provisioning. Publish an
+   initial base only if required and authorized; keep unverified workflow changes in staging.
 4. Verify subscription and deployment entitlement, then read Computer status and provision only if no usable deployment exists.
 5. Wait for lifecycle completion and verify Computer health.
 6. Install and verify required skills; complete their setup actions and authentication in dependency order.
 7. Configure channels and complete any user login flow; probe status.
-8. Add customer-authored workspace artifacts or browser helpers.
-9. Create Tasks or schedules only after the required capabilities are verified.
-10. Run a representative task and inspect its linked replicated chat, tool calls, result, and relevant resource state.
+8. Complete each skill package and its registered helpers. Prove workspace-skill discovery before
+   assigning a new slug in staging. Test the intended capability before publishing that assignment
+   within the user's authorization; verify live configuration afterward.
+9. Create Tasks or schedules only after the required capabilities are verified. Task context names the owning skill and supplies run inputs; create recurring work paused.
+10. Test the intended entry point in a fresh execution and inspect its linked chat, helper calls, result, and destination state. Verify recurring work safely skips or reconciles prior work on a second run.
 
 ## Lifecycle, health, diagnostics, and backups
 
@@ -98,7 +107,8 @@ restore snapshot and deletion behavior, wait for completion, then verify both st
 
 ## Skills, setup, and credentials
 
-Use this lifecycle for every Computer skill:
+For catalog skills, use this lifecycle. For customer-authored workspace skills, use the separate
+frontmatter and runtime-discovery checks under **Customer-authored workspace skills** below:
 
 1. Read `/skills/catalog`, the selected `/skills/catalog/{skillSlug}`, and `/skills/state`.
 2. Install the exact catalog choice through `/skills/install`.
@@ -287,7 +297,8 @@ Browser-independent API helper, and the full acceptance workflow.
 To expose a helper during a voice or messaging conversation, add the exact allowed `computer`
 action returned by Agent function discovery and map conversation values to the helper's registered
 arguments. Set `computerDelegateAccountId` only when the helper belongs to another Agent's Computer.
-Use ordinary Computer delegation for novel multi-step work.
+Use ordinary Computer delegation to investigate novel multi-step work during construction. Before
+delivery, put the procedure in an owning skill and its Computer operations in registered helpers.
 
 ## Browser access and workflow generation
 
@@ -325,7 +336,8 @@ Computer Tasks. Use the fewest tabs needed for the workflow:
    state. Reuse it when safe. Close duplicate or blank tabs that the workflow created, while keeping
    at least one usable tab open. Do not close a user's unrelated tabs.
 
-Include this tab plan in customer-authored Browser skills and Computer Task instructions. For a
+Keep this tab plan in the owning Browser skill; delivered Tasks name the skill rather than copying
+its procedure. Temporary construction Tasks can include tab instructions directly. For a
 single-site form workflow, verify that the Agent continued in the same tab through inspection,
 entry, save, and confirmation unless a second tab was necessary. When diagnosing tab growth through
 CDP, count targets with `type:"page"`; embedded `iframe` targets are not separate tabs.
@@ -339,24 +351,29 @@ starts; if new evidence is recorded, start a new generation rather than assuming
 Follow the generation conversation reference and status `phase`, `updatedAt`, and `lastActivityAt`
 while it runs.
 
-Do not treat generation success as complete acceptance. Prove all three layers independently:
+Do not treat generation success as complete acceptance. First prove owning-skill discovery using
+the workspace-skill checks above, then verify these boundaries independently:
 
 1. The expected helper appears in `/helpers` with the correct inputs, result metadata, owner, Browser
    requirement, and required-secret IDs.
 2. A safe representative `/helpers/execute` call succeeds and every runtime result field callers
    depend on is declared in the registered result metadata; verify the destination effect when one
    is expected.
-3. Agent function discovery exposes the intended Computer capability, and a staged conversational
-   test can actually select and use the helper. Confirm these checks in the environment that will
-   run the Agent.
+3. The intended Task, on-demand request, or staged conversation can select and use the capability
+   in a fresh execution. For a conversational deliverable, discover the intended Computer function
+   and test it in staging. A direct helper caller does not require a conversational test or extra
+   Task. Confirm checks in the environment that will run the Agent.
 
 Preserve opaque identifiers returned by helpers byte-for-byte. Do not replace them with numeric IDs
 in a visible application URL unless the helper contract explicitly says they are interchangeable.
 
-## Memory, sessions, tools, and scheduled work
+## Existing memory, session inspection, tools, and scheduled work
 
-Use `/memory/explorer` to inspect memory and the `/memory` create/update/delete operations for compact
-durable facts. Do not store credentials, transcripts, or large artifacts. Deletion is permanent.
+Use `/memory/explorer` and the `/memory` operations only when existing-memory investigation or
+maintenance is part of the request. Do not create a memory dependency for a new workflow. Keep
+business state in the source system or an appropriate documented Vida resource, and procedures in
+the owning skill. Do not store credentials, transcripts, or large artifacts in memory. Deletion is
+permanent.
 
 Use `GET /api/v2/computer/sessions` to list authorized sessions and the session reset operation only
 when conversational context should be discarded. `/session/resolve` returns the linked Vida room for
@@ -372,9 +389,12 @@ replicated assistant reply without manually reading the linked chat. Load
 `tasks-contacts-and-communications.md` for creation, result polling, cancellation, run history, and
 deletion rules.
 
-## Heartbeats
+## Existing heartbeat maintenance
 
-`heartbeatInstructions` should define useful proactive work, evidence thresholds, and when to remain quiet. Avoid routine noise. Report only a legitimate operational issue or a concrete, measurable improvement. Use `heartbeatEvery` for cadence.
+Do not configure heartbeats as part of a new workflow. Recurring business work belongs in repeating
+Tasks that invoke a skill and its helpers. The fields below remain available when the user explicitly
+requests maintenance of existing heartbeat behavior; do not disable or replace it as incidental
+cleanup. `heartbeatInstructions` defines that existing behavior and `heartbeatEvery` its cadence.
 
 Advanced `heartbeatConfig` is a replacement-style authored object when supplied. Start from the current object and preserve keys the user did not ask to remove. `suppressToolErrorWarnings: true` prevents raw automatic tool-error notices from reaching customer-facing destinations; it does not suppress an intentional final alert written by the agent.
 
@@ -386,11 +406,13 @@ A complete Computer Agent setup report identifies:
 
 - account and live Agent configuration
 - provisioned lifecycle and health state
-- installed and verified skills
-- channel connection/probe state
-- heartbeat configuration and synchronization result
-- representative Task ID and terminal state
-- linked replicated Vida chat containing the work and tool calls
+- workflow inventory: trigger/Task or on-demand entry point, owning skill path, registered helpers, required resources, declared secret IDs, and state/output locations
+- installed and verified skills and helper contracts
+- channel connection/probe state when applicable
+- representative fresh execution, terminal state, helper results, and destination readback
+- recurring Task state and second-run deduplication evidence when applicable
+- linked replicated Vida chat containing the work and tool calls when the entry point creates one
+- any remaining legacy runtime dependency; heartbeat synchronization evidence only when heartbeat maintenance was requested
 - any unresolved requirement or user action
 
 Do not infer completion from an accepted job, login start, Task enqueue, or repair request.

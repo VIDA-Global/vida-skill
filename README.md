@@ -1,7 +1,8 @@
-# Vida API skill
+# Vida skill
 
 This repository is the source of truth for Vida's `vida-api` agent skill. The skill
-teaches agents how to use Vida's API for account onboarding, Agent configuration,
+teaches agents how to build, verify, and operate Vida Agents through the API: account onboarding,
+Agent configuration,
 contacts, Tasks, integrations, optional reseller administration, Computer Agent setup and
 operations, safe Computer Agent cloning, logs, and conversations. The same skill supports
 connected Vida MCP tools and direct HTTP API access, with shared workflow, account-scope, and
@@ -108,3 +109,21 @@ The generated [OpenAPI reference](https://vida.io/docs/apiv2.json) defines exact
 Vida's [API guides](https://vida.io/docs/api-reference/overview) explain product concepts and
 multi-step workflows. This skill supplies the execution order, safety rules, and verification
 requirements an API-using agent needs to perform those workflows reliably.
+
+## Build and operate an Agent
+
+This repository contains the complete build and operations guidance for the `vida-api` skill.
+Start with [Agent building](references/agent-building.md) for a new Agent or workflow extension.
+Use the focused references for routine configuration and operation of an existing capability.
+
+Every new or changed Computer workflow follows the
+[Computer Agent build standard](references/computer-agent-build-standard.md): **Task → Skill → Helpers**.
+Use repeating Tasks for recurring work and the same skill/helper structure for on-demand requests.
+Keep the procedure, helpers, resources, retained `outputs/{runId}/`,
+and disposable `tmp/{runId}/` under the owning skill. Workspace, Browser, and diagnostic APIs remain
+construction and support tools; new delivered workflows do not depend on heartbeats, conversational
+memory, workspace discovery, or loose scripts.
+
+Distribute `SKILL.md` and its complete reference tree together. Installed skills and instructions
+already loaded in a conversation need their host's update/reload path. Verify the installed version
+before claiming a source change governs a build.
