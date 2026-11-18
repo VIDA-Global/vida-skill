@@ -76,6 +76,10 @@ use `@browser_function(...)` when the live Browser context is required. Prefer a
 operation over UI interaction when possible. Both kinds remain registered, skill-owned helpers with
 declared inputs, results, and secret requirements. Follow [helper-authoring.md](helper-authoring.md).
 
+For Computer workflows used during live voice calls, also read
+[conversational-helper-design.md](conversational-helper-design.md) before choosing helper boundaries
+and input/output handoffs.
+
 Agent-level instructions set the role, boundaries, and routing to skills. Do not maintain a second
 copy of the workflow in the Agent prompt or Task context. Keep business state in its authoritative
 source system or an appropriate documented Vida resource; use Contacts only for person-centered

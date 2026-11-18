@@ -4,6 +4,10 @@ Read this reference when an Agent needs to manually create or change a reusable 
 Use Browser exploration and recording when the operation must be learned from a website. Author
 reviewed helpers from that evidence or use managed generation; generation is optional.
 
+When helpers will run during live voice calls, read
+[conversational-helper-design.md](conversational-helper-design.md) before defining their contracts.
+Use its guidance for ID reuse, bounded waits, compact results, and conversational acceptance.
+
 Follow [computer-agent-build-standard.md](computer-agent-build-standard.md) for every new or changed
 workflow. Helpers are the required Computer operation layer in a delivered workflow. Keep the
 procedure and required resources in the owning skill. Put generated file deliverables in that

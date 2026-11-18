@@ -118,6 +118,10 @@ Computer workflow, follow [computer-agent-build-standard.md](computer-agent-buil
 put multi-step procedures in an owning skill that composes registered helpers. General Computer
 delegation can help investigate novel work during construction; it must not replace that structure.
 
+For Computer helpers used during live calls, read
+[conversational-helper-design.md](conversational-helper-design.md) and apply it to helper selection,
+conversation pacing, retained IDs, and response-time acceptance.
+
 The API intentionally does not add function-specific validation beyond the current Agent update behavior. Use the function guide and current configuration shape; do not infer unsupported fields.
 
 Root-level relationships include transfer confirmation/monitoring/attended-transfer controls, recording notice settings, speech timing, the thinking model for Pause & Think, and typed reporting fields. Read the OpenAPI `AgentConfigurationWrite` schema for the complete approved writable set.
