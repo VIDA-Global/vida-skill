@@ -14,6 +14,14 @@ procedure and required resources in the owning skill. Put generated file deliver
 skill's `outputs/{runId}/` and disposable exploration or intermediate files in `tmp/{runId}/`.
 Keep required helper source out of those generated-file directories.
 
+Build total, phase, and meaningful subtask timing into new or changed helpers using
+[helper-timing-and-tracing.md](helper-timing-and-tracing.md). Implement or reuse instrumentation
+inside the owning skill; declare its compact diagnostics in the result metadata and keep detailed
+traces outside conversational context. The examples illustrate the timing evidence to produce,
+without requiring a particular library. For the API example below, time validation, credential
+resolution, the request and response parsing separately; keep request/parsing as subtasks of the
+lookup phase. Finalize diagnostics on every return or error path when adapting it for deployment.
+
 ## Choose the helper type
 
 - Use `@computer_function(...)` for a stable API, file, or data operation that does not open or
@@ -172,7 +180,9 @@ local execution path before diagnosing a missing credential.
 3. Call `POST /helpers/refresh`. Require `ok: true`; inspect every compile and registry finding and
    verify the expected callable contract in `functions`.
 4. Read `GET /helpers` and preserve the returned name and argument schema exactly.
-5. Execute safe representative input through `POST /helpers/execute` with
+5. Execute safe representative input, inspecting total/phase/subtask timings and an early/error
+   return as described in [helper-timing-and-tracing.md](helper-timing-and-tracing.md),
+   through `POST /helpers/execute` with
    `{name: "lookup_customer", arguments: {customer_id: "..."}}`. Require a structured `done`,
    `blocked`, or `need_user` result and verify every result field against the declared metadata.
 6. For mutating helpers, use an idempotency key when the destination API supports one. After a

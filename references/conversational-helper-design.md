@@ -71,17 +71,11 @@ Return a bounded set of relevant facts, exact IDs, outcome, and any verified sta
 next turn. Keep helper descriptions and routing instructions concise. Leave detailed implementation
 in the owning helper and procedure instead of copying it into the Agent prompt or every task.
 
-For operations that can pause a call, include lightweight elapsed time and a failure code/phase.
-Declare diagnostic fields in the helper result contract and verify they survive the actual voice
-result path. Optional detailed traces should have a correlation reference and retention policy;
-keep them outside conversational results. Exclude credentials, headers, request bodies, page dumps,
-and unnecessary personal data. Diagnostic collection failures must not repeat a business action.
-
-Measure helper execution and the broader conversational response separately. During a latency
-investigation, capture relevant helper phases, Browser calls, external request times, and model or
-orchestration spans where available. Use monotonic clocks for elapsed durations. Overlapping spans
-are not additive, and uninstrumented time is unknown rather than automatically platform or API time.
-Do not describe response-cycle measurements as audible silence without audio evidence.
+Build total, phase and nested subtask timings into helpers from the start, following
+[helper-timing-and-tracing.md](helper-timing-and-tracing.md). Keep only declared compact diagnostics
+in result.diagnostics, verify that they survive the voice result path, and retain bounded detailed
+traces outside conversational context. Measure helper and broader response times separately;
+missing model/orchestration spans remain unknown and overlapping spans are not additive.
 
 Give a brief initial progress notice. Verify runtime support before promising an announcement while
 a helper remains pending; prompt instructions alone cannot guarantee speech during a blocking call.
