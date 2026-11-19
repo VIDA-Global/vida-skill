@@ -130,6 +130,11 @@ Identify the skill's output and temporary directories separately from its source
 
 Before calling the workflow complete:
 
+Include total, phase and meaningful subtask timing in authored helpers, following
+[helper-timing-and-tracing.md](helper-timing-and-tracing.md). Acceptance evidence must show nested
+work and waits, a failure/early-return path, and compact diagnostics retained by the intended caller.
+Reuse the existing safe test; do not add production mutations solely for profiling.
+
 1. Read the skill package back, prove runtime discovery, and verify helper registration and contracts.
 2. Execute each required helper with safe representative input and verify its result and destination
    effect. Setup verification and compilation do not replace execution evidence.

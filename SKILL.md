@@ -127,6 +127,8 @@ before acting:
   authentication, clone planning, and acceptance evidence
 - `references/helper-authoring.md`: exact Browser-independent helper source, managed-secret setup,
   registration, execution, and conversational acceptance workflow
+- `references/helper-timing-and-tracing.md`: read when creating or changing helpers; total, phase and
+  nested subtask timing, compact diagnostics, bounded traces, and response-time attribution
 - `references/conversational-helper-design.md`: read when designing or optimizing Computer helpers
   used during live voice calls; helper boundaries, ID reuse, Browser waits, and response-time checks
 - `references/tasks-contacts-and-communications.md`: Contacts, objectives, communication and

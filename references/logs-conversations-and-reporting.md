@@ -81,6 +81,16 @@ For experiments, compare like-for-like populations and time ranges using `experi
 `experiments.variant`, and `experiments.versionId`. Keep the same reporting definitions across
 variants and report sample size and guardrails with every conclusion.
 
+## Helper latency evidence
+
+Follow [helper-timing-and-tracing.md](helper-timing-and-tracing.md) when tracing a slow helper.
+Use result.diagnostics.trace_id and the owning skill's declared output directory to retrieve only
+that invocation's detailed trace. Inspect the phase and its nested subtasks, including request,
+wait, sleep, submission, verification and fallback spans. Do not add inclusive parent/child times.
+Compare helper duration with the separately measured response cycle; attribute model/orchestration
+or external API time only where correlated spans actually cover it. Missing coverage remains unknown.
+Do not replay a mutation or load trace files into the live voice context to investigate latency.
+
 ## Incident evidence
 
 For a customer-impacting event:

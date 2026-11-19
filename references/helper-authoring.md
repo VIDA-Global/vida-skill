@@ -14,6 +14,10 @@ procedure and required resources in the owning skill. Put generated file deliver
 skill's `outputs/{runId}/` and disposable exploration or intermediate files in `tmp/{runId}/`.
 Keep required helper source out of those generated-file directories.
 
+Build total, phase, and meaningful subtask timing into new or changed helpers using
+[helper-timing-and-tracing.md](helper-timing-and-tracing.md). Reuse existing instrumentation; keep
+compact diagnostics in the declared result and detailed traces outside conversational context.
+
 ## Choose the helper type
 
 - Use `@computer_function(...)` for a stable API, file, or data operation that does not open or
@@ -29,12 +33,16 @@ Keep required helper source out of those generated-file directories.
 
 ## Browser-independent API example
 
-Write an owning `skills/customer-records/SKILL.md`, then save this source as
+Write an owning `skills/customer-records/SKILL.md`. Copy the
+[helper timing template](../assets/helper_timing.py) to its `helpers/helper_timing.py` and declare
+`outputs/helper-timing/` as the bounded diagnostic output directory in that skill. Save this source as
 `skills/customer-records/helpers/lookup_customer.py`:
 
 ```python
 import json
 from urllib import error, parse, request
+from pathlib import Path
+from helper_timing import HelperTiming
 
 from vida_helper_runtime import computer_function, managed_secret
 
@@ -54,7 +62,7 @@ API_ROOT = "https://api.example.com/v1"
     },
     result={
         "type": "object",
-        "required": ["status", "summary"],
+        "required": ["status", "summary", "result"],
         "properties": {
             "status": {"type": "string", "enum": ["done", "blocked", "need_user"]},
             "summary": {"type": "string"},
@@ -62,9 +70,26 @@ API_ROOT = "https://api.example.com/v1"
             "httpStatus": {"type": "integer"},
             "result": {
                 "type": "object",
+                "required": ["diagnostics"],
                 "properties": {
                     "customerId": {"type": "string"},
                     "name": {"type": "string"},
+                    "diagnostics": {
+                        "type": "object",
+                        "required": ["trace_id", "elapsed_ms", "phase_ms"],
+                        "properties": {
+                            "trace_id": {"type": "string"},
+                            "elapsed_ms": {"type": "integer"},
+                            "phase_ms": {"type": "object", "additionalProperties": {"type": "integer"}},
+                            "phase": {"type": "string"},
+                            "code": {"type": "string"},
+                            "trace_ref": {"type": "string"},
+                            "instrumentation_ms": {"type": "integer"},
+                            "dropped_spans": {"type": "integer"},
+                            "unfinished_spans": {"type": "integer"},
+                            "trace_write_failed": {"type": "boolean"},
+                        },
+                    },
                 },
             },
         },
@@ -72,24 +97,53 @@ API_ROOT = "https://api.example.com/v1"
     required_secrets=["example_api_token"],
 )
 def lookup_customer(customer_id):
-    customer_id = str(customer_id or "").strip()
-    if not customer_id:
-        return {
-            "status": "blocked",
-            "summary": "A customer ID is required.",
-            "reason": "invalid_customer_id",
-        }
+    timing = HelperTiming("lookup_customer", output_dir=(
+        Path(__file__).resolve().parent.parent / "outputs" / "helper-timing"
+    ))
+    result = None
+    try:
+        result = _lookup_customer(customer_id, timing)
+        return result
+    finally:
+        diagnostics = timing.finish(
+            result["status"] if result is not None else "failed",
+            result.get("reason") if result is not None else "unexpected_error",
+        )
+        if result is not None:
+            result.setdefault("result", {})["diagnostics"] = diagnostics
 
-    token = managed_secret("example_api_token")
-    url = f"{API_ROOT}/customers/{parse.quote(customer_id, safe='')}"
-    api_request = request.Request(
-        url,
-        headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
-    )
+
+def _lookup_customer(customer_id, timing):
+    with timing.span("validate_arguments", kind="phase") as validation:
+        customer_id = str(customer_id or "").strip()
+        if not customer_id:
+            validation.annotate(outcome="blocked", code="invalid_customer_id")
+            return {
+                "status": "blocked",
+                "summary": "A customer ID is required.",
+                "reason": "invalid_customer_id",
+            }
+
+    with timing.span("authentication", kind="phase"):
+        token = managed_secret("example_api_token")
+        url = f"{API_ROOT}/customers/{parse.quote(customer_id, safe='')}"
+        api_request = request.Request(
+            url,
+            headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
+        )
 
     try:
-        with request.urlopen(api_request, timeout=15) as response:
-            payload = json.loads(response.read().decode("utf-8"))
+        with timing.span("customer_lookup", kind="phase"):
+            with timing.span("customer_request", kind="http") as request_span:
+                try:
+                    with request.urlopen(api_request, timeout=15) as response:
+                        request_span.annotate(http_status=response.status)
+                        body = response.read()
+                except error.HTTPError as exc:
+                    request_span.annotate(http_status=exc.code)
+                    raise
+            with timing.span("parse_response"):
+                payload = json.loads(body.decode("utf-8"))
     except error.HTTPError as exc:
         if exc.code in (401, 403):
             return {
@@ -172,7 +226,9 @@ local execution path before diagnosing a missing credential.
 3. Call `POST /helpers/refresh`. Require `ok: true`; inspect every compile and registry finding and
    verify the expected callable contract in `functions`.
 4. Read `GET /helpers` and preserve the returned name and argument schema exactly.
-5. Execute safe representative input through `POST /helpers/execute` with
+5. Execute safe representative input, inspecting total/phase/subtask timings and an early/error
+   return as described in [helper-timing-and-tracing.md](helper-timing-and-tracing.md),
+   through `POST /helpers/execute` with
    `{name: "lookup_customer", arguments: {customer_id: "..."}}`. Require a structured `done`,
    `blocked`, or `need_user` result and verify every result field against the declared metadata.
 6. For mutating helpers, use an idempotency key when the destination API supports one. After a
