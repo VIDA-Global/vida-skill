@@ -15,8 +15,12 @@ skill's `outputs/{runId}/` and disposable exploration or intermediate files in `
 Keep required helper source out of those generated-file directories.
 
 Build total, phase, and meaningful subtask timing into new or changed helpers using
-[helper-timing-and-tracing.md](helper-timing-and-tracing.md). Reuse existing instrumentation; keep
-compact diagnostics in the declared result and detailed traces outside conversational context.
+[helper-timing-and-tracing.md](helper-timing-and-tracing.md). Implement or reuse instrumentation
+inside the owning skill; declare its compact diagnostics in the result metadata and keep detailed
+traces outside conversational context. The examples illustrate the timing evidence to produce,
+without requiring a particular library. For the API example below, time validation, credential
+resolution, the request and response parsing separately; keep request/parsing as subtasks of the
+lookup phase. Finalize diagnostics on every return or error path when adapting it for deployment.
 
 ## Choose the helper type
 
@@ -33,16 +37,12 @@ compact diagnostics in the declared result and detailed traces outside conversat
 
 ## Browser-independent API example
 
-Write an owning `skills/customer-records/SKILL.md`. Copy the
-[helper timing template](../assets/helper_timing.py) to its `helpers/helper_timing.py` and declare
-`outputs/helper-timing/` as the bounded diagnostic output directory in that skill. Save this source as
+Write an owning `skills/customer-records/SKILL.md`, then save this source as
 `skills/customer-records/helpers/lookup_customer.py`:
 
 ```python
 import json
 from urllib import error, parse, request
-from pathlib import Path
-from helper_timing import HelperTiming
 
 from vida_helper_runtime import computer_function, managed_secret
 
@@ -62,7 +62,7 @@ API_ROOT = "https://api.example.com/v1"
     },
     result={
         "type": "object",
-        "required": ["status", "summary", "result"],
+        "required": ["status", "summary"],
         "properties": {
             "status": {"type": "string", "enum": ["done", "blocked", "need_user"]},
             "summary": {"type": "string"},
@@ -70,26 +70,9 @@ API_ROOT = "https://api.example.com/v1"
             "httpStatus": {"type": "integer"},
             "result": {
                 "type": "object",
-                "required": ["diagnostics"],
                 "properties": {
                     "customerId": {"type": "string"},
                     "name": {"type": "string"},
-                    "diagnostics": {
-                        "type": "object",
-                        "required": ["trace_id", "elapsed_ms", "phase_ms"],
-                        "properties": {
-                            "trace_id": {"type": "string"},
-                            "elapsed_ms": {"type": "integer"},
-                            "phase_ms": {"type": "object", "additionalProperties": {"type": "integer"}},
-                            "phase": {"type": "string"},
-                            "code": {"type": "string"},
-                            "trace_ref": {"type": "string"},
-                            "instrumentation_ms": {"type": "integer"},
-                            "dropped_spans": {"type": "integer"},
-                            "unfinished_spans": {"type": "integer"},
-                            "trace_write_failed": {"type": "boolean"},
-                        },
-                    },
                 },
             },
         },
@@ -97,53 +80,24 @@ API_ROOT = "https://api.example.com/v1"
     required_secrets=["example_api_token"],
 )
 def lookup_customer(customer_id):
-    timing = HelperTiming("lookup_customer", output_dir=(
-        Path(__file__).resolve().parent.parent / "outputs" / "helper-timing"
-    ))
-    result = None
-    try:
-        result = _lookup_customer(customer_id, timing)
-        return result
-    finally:
-        diagnostics = timing.finish(
-            result["status"] if result is not None else "failed",
-            result.get("reason") if result is not None else "unexpected_error",
-        )
-        if result is not None:
-            result.setdefault("result", {})["diagnostics"] = diagnostics
+    customer_id = str(customer_id or "").strip()
+    if not customer_id:
+        return {
+            "status": "blocked",
+            "summary": "A customer ID is required.",
+            "reason": "invalid_customer_id",
+        }
 
-
-def _lookup_customer(customer_id, timing):
-    with timing.span("validate_arguments", kind="phase") as validation:
-        customer_id = str(customer_id or "").strip()
-        if not customer_id:
-            validation.annotate(outcome="blocked", code="invalid_customer_id")
-            return {
-                "status": "blocked",
-                "summary": "A customer ID is required.",
-                "reason": "invalid_customer_id",
-            }
-
-    with timing.span("authentication", kind="phase"):
-        token = managed_secret("example_api_token")
-        url = f"{API_ROOT}/customers/{parse.quote(customer_id, safe='')}"
-        api_request = request.Request(
-            url,
-            headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
-        )
+    token = managed_secret("example_api_token")
+    url = f"{API_ROOT}/customers/{parse.quote(customer_id, safe='')}"
+    api_request = request.Request(
+        url,
+        headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
+    )
 
     try:
-        with timing.span("customer_lookup", kind="phase"):
-            with timing.span("customer_request", kind="http") as request_span:
-                try:
-                    with request.urlopen(api_request, timeout=15) as response:
-                        request_span.annotate(http_status=response.status)
-                        body = response.read()
-                except error.HTTPError as exc:
-                    request_span.annotate(http_status=exc.code)
-                    raise
-            with timing.span("parse_response"):
-                payload = json.loads(body.decode("utf-8"))
+        with request.urlopen(api_request, timeout=15) as response:
+            payload = json.loads(response.read().decode("utf-8"))
     except error.HTTPError as exc:
         if exc.code in (401, 403):
             return {

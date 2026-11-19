@@ -76,56 +76,69 @@ exception text. For HTTP evidence, record a safe operation label and numeric sta
 an endpoint template may be used by a separate vetted collector. Avoid invasive global interception
 when timing the helper's own known request or Browser call provides the necessary evidence.
 
-## Reusable implementation
+## Examples of timing evidence
 
-[assets/helper_timing.py](../assets/helper_timing.py) is a standard-library template. Copy it into
-the owning skill's `helpers/helper_timing.py` and import it from the helper. It supports nested spans,
-async-context parent isolation, a compact phase summary, bounded private trace files, and retention
-limited to its own filenames. It is not an installed Vida runtime module. Adapt or reuse an existing
-collector when the workflow already has one.
+Implement or reuse instrumentation inside the owning skill's helper source. Choose an approach
+that fits that workflow; there is no required timer package or additional Vida runtime import.
+The examples below describe the evidence to produce, not additional API request fields.
 
-```python
-from pathlib import Path
-from helper_timing import HelperTiming
+For an illustrative customer-selection operation, the compact helper result could contain:
 
-def example_helper(customer_id):
-    timing = HelperTiming(
-        "example_helper",
-        output_dir=Path(__file__).resolve().parent.parent / "outputs" / "helper-timing",
-    )
-    response = None
-    try:
-        # The implementation owns business errors, confirmations, and retry policy.
-        response = run_business_work(customer_id, timing)
-        return response
-    finally:
-        diagnostics = timing.finish(
-            response["status"] if response is not None else "failed",
-            response.get("reason") if response is not None else "unexpected_error",
-        )
-        if response is not None:
-            response.setdefault("result", {})["diagnostics"] = diagnostics
-
-def run_business_work(customer_id, timing):
-    with timing.span("customer_lookup", kind="phase"):
-        with timing.span("customer_request", kind="http") as request_span:
-            response = perform_existing_request(customer_id)
-            request_span.annotate(http_status=response.status)
-        with timing.span("parse_customer_response"):
-            customer = parse_existing_response(response)
-    return {"status": "done", "summary": "Lookup complete.", "result": customer}
+```json
+{
+  "status": "done",
+  "summary": "Customer selected.",
+  "result": {
+    "diagnostics": {
+      "trace_id": "example-trace",
+      "elapsed_ms": 2150,
+      "phase_ms": {"select_customer": 2000},
+      "trace_ref": "outputs/example-run/helper-timing.json"
+    }
+  }
+}
 ```
 
-This sketch shows placement; [helper-authoring.md](helper-authoring.md) has a complete registered
-example. The template's defaults are 256 child spans, 200 retained runs, and seven days of retention;
-choose limits appropriate to the workflow. `trace_ref` is relative to its configured output directory.
-`elapsed_ms` includes final persistence, while the detailed root's `body_elapsed_ms` ends before
-persistence. `instrumentation_ms` measures collector bookkeeping/writing and overlaps total elapsed
-time. It is not extra time to add to that total. An unfinished or truncated trace must say so.
+Declare the chosen diagnostic fields in that helper's result schema. The corresponding detailed
+trace shows the individual subtasks and their parent relationships:
 
-Trace write failures must not discard a successful business result, swallow a business exception,
-or cause another submission. Keep the collector local and lightweight. Measure instrumentation
-overhead on representative work; avoid remote log uploads or per-poll disk writes in the hot path.
+```json
+{
+  "trace_id": "example-trace",
+  "inclusive_durations": true,
+  "spans": [
+    {"span_id": "helper", "parent_span_id": null, "name": "select_customer_helper", "kind": "helper", "start_ms": 0, "duration_ms": 2150, "outcome": "ok"},
+    {"span_id": "selection", "parent_span_id": "helper", "name": "select_customer", "kind": "phase", "start_ms": 100, "duration_ms": 2000, "outcome": "ok"},
+    {"span_id": "navigation", "parent_span_id": "selection", "name": "open_form", "kind": "browser", "start_ms": 100, "duration_ms": 600, "outcome": "ok"},
+    {"span_id": "request", "parent_span_id": "selection", "name": "search_customer", "kind": "http", "start_ms": 700, "duration_ms": 500, "outcome": "ok", "http_status": 200},
+    {"span_id": "wait", "parent_span_id": "selection", "name": "wait_for_matching_result", "kind": "wait", "start_ms": 1200, "duration_ms": 700, "outcome": "ok", "attempts": 3},
+    {"span_id": "select", "parent_span_id": "selection", "name": "select_match", "kind": "browser", "start_ms": 1900, "duration_ms": 200, "outcome": "ok"}
+  ]
+}
+```
+
+The selection phase takes 2,000 ms; its subtasks are already included in that duration. The remaining
+150 ms is outside the shown phase. In a complete implementation, label meaningful validation or
+finalization work when measurable; do not assign an unmeasured remainder to a particular service.
+These numbers and short IDs are illustrative. Generate opaque IDs for real invocations and spans.
+
+For a failed wait, retain a compact failure code and the specific subtask, for example
+`code="search_timeout"` and `phase="select_customer.wait_for_matching_result"`, along with elapsed
+time and the same trace reference. The detailed wait span should report timeout and attempts.
+A successful empty search instead remains a normal `done` result with a distinguishing `no_match`
+code; it must not become a timeout. For a fallback, record the primary outcome and reason, then a
+separate fallback span and its outcome. A recovered helper can succeed while retaining that history.
+
+Use finally/context-manager paths to finish each started span after normal completion, early return,
+or exception. Assemble diagnostics through a common result finalizer so error paths include them
+as well. Preserve the helper's existing exception and mutation-reconciliation behavior.
+
+Choose and document span/output limits and retention appropriate to the workflow; explicitly mark
+truncated or unfinished traces. Define whether total timing includes the final trace write.
+Measure collection overhead and state whether it overlaps the reported total, rather than adding
+it twice. Trace write failures must not discard a successful business result, swallow a business
+exception, or cause another submission. Keep collection local and lightweight; avoid remote log
+uploads or per-poll disk writes in the hot path.
 
 ## Separate helper timing from the rest of the response
 
